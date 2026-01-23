@@ -31,7 +31,8 @@ export default function AdminPage() {
 
     // Global exposure for quick links
     useEffect(() => {
-        (window as any).setActiveTab = setActiveTab;
+        // @ts-ignore
+        window.setActiveTab = setActiveTab;
     }, [setActiveTab]);
 
     // Auth check
@@ -154,7 +155,7 @@ export default function AdminPage() {
                             <div className="animate-pulse glass h-[600px] rounded-[2rem]"></div>
                         ) : (
                             <AnimatePresence mode="wait">
-                                {activeTab === 'dashboard' && <DashboardView members={members} rounds={rounds} />}
+                                {activeTab === 'dashboard' && <DashboardView members={members} rounds={rounds} setActiveTab={setActiveTab} />}
                                 {activeTab === 'members' && <MemberManagementView members={members} refresh={refreshData} />}
                                 {activeTab === 'rounds' && <RoundManagementView rounds={rounds} refresh={refreshData} />}
                                 {activeTab === 'history' && (
