@@ -1,11 +1,14 @@
 @import "tailwindcss";
 
 :root {
-    --background: #fdfdfd;
-    --foreground: #121212;
-    --golf-green: #2d5a27;
+    --background: #f8faf9;
+    --foreground: #1a1a1a;
+    --golf-green: #1e3a2b;
+    --golf-green-bright: #2d5a27;
     --golf-gold: #b8860b;
     --golf-gold-light: #d4af37;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --border-color: rgba(30, 58, 43, 0.08);
 }
 
 body {
@@ -19,17 +22,25 @@ a {
 }
 
 .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.04);
 }
 
-.text-gradient {
-    background: linear-gradient(135deg, var(--golf-gold) 0%, var(--golf-gold-light) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.golf-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border-radius: 2rem;
+    transition: all 0.3s ease;
+}
+
+.golf-card:hover {
+    border-color: var(--golf-green-bright);
+    box-shadow: 0 12px 40px rgba(30, 58, 43, 0.08);
+    transform: translateY(-4px);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
