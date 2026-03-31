@@ -90,7 +90,7 @@ export default function Home() {
                         transition={{ duration: 1, delay: 0.5 }}
                         className="text-lg md:text-2xl text-[#1e3a2b]/70 max-w-3xl mx-auto mb-16 font-light leading-relaxed tracking-tight"
                     >
-                        포천 <span className="text-[#2d5a27] font-bold italic border-b-2 border-[#2d5a27]/20">라싸CC</span>에서의 고품격 라운딩. <br className="hidden md:block" />
+                        포천 <span className="text-[#2d5a27] font-bold italic border-b-2 border-[#2d5a27]/20">라싸GC</span>에서의 고품격 라운딩. <br className="hidden md:block" />
                         시간을 넘어서는 우정과 필드 위에서의 특별한 경험을 함께하십시오.
                     </motion.p>
 
@@ -234,7 +234,7 @@ export default function Home() {
                         className="text-[#1e3a2b]"
                     >
                         <h3 className="text-[#b8860b] uppercase tracking-[0.5em] text-[11px] font-black mb-6">Location</h3>
-                        <h2 className="text-5xl md:text-6xl font-bold font-serif mb-12 italic tracking-tight">명문 라싸CC</h2>
+                        <h2 className="text-5xl md:text-6xl font-bold font-serif mb-12 italic tracking-tight">명문 라싸GC</h2>
                         <p className="text-xl md:text-2xl text-[#1e3a2b]/70 mb-16 font-light leading-relaxed tracking-tight border-l-4 border-[#2d5a27]/20 pl-8 italic">
                             자연의 순수함이 살아있는 포천의 명문 골프장. 전용 구장에서 불어반 회원들만을 위한 최고의 그린 컨디션과 격조 높은 서비스를 경험하십시오.
                         </p>
@@ -243,7 +243,7 @@ export default function Home() {
                             <div className="p-10 golf-card">
                                 <MapPin className="text-[#b8860b] mb-6" size={32} />
                                 <h5 className="font-bold text-lg mb-2">주소</h5>
-                                <p className="opacity-60 text-sm leading-relaxed">경기도 포천시 이동면 화동로 2496 <br />라싸 컨트리클럽</p>
+                                <p className="opacity-60 text-sm leading-relaxed">경기도 포천시 이동면 화동로 2496 <br />라싸 골프클럽</p>
                             </div>
                             <div className="p-10 golf-card">
                                 <Phone className="text-[#b8860b] mb-6" size={32} />
