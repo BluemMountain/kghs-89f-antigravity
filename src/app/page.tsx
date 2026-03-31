@@ -8,11 +8,9 @@ import RsvpStatus from "@/components/RsvpStatus";
 import MemberList from "@/components/MemberList";
 
 export default function Home() {
-    const fadeInUp = {
+    const fadeInUp: any = {
         initial: { opacity: 0, y: 30 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true },
-        transition: { duration: 0.8, ease: "easeOut" }
+        animate: { opacity: 1, y: 0, transition: { duration: 0.8 } }
     };
 
     return (
@@ -31,7 +29,7 @@ export default function Home() {
                     <Link href="#schedule" className="hover:text-[#b8860b] hover:opacity-100 transition-all">Schedule</Link>
                     <Link href="#rsvp" className="hover:text-[#b8860b] hover:opacity-100 transition-all">RSVP</Link>
                     <Link href="#members" className="hover:text-[#b8860b] hover:opacity-100 transition-all">Members</Link>
-                    <Link href="#location" className="hover:text-[#b8860b] hover:opacity-100 transition-all text-[#1e3a2b]">Lhasa CC</Link>
+                    <Link href="#location" className="hover:text-[#b8860b] hover:opacity-100 transition-all text-[#1e3a2b]">Lassa GC</Link>
                     <Link href="/gallery" className="hover:text-[#b8860b] hover:opacity-100 transition-all flex items-center gap-1">
                         Gallery
                     </Link>
@@ -56,13 +54,13 @@ export default function Home() {
                 <div className="absolute inset-0 z-0 overflow-hidden">
                     <Image
                         src="/lhasa_cc_golf_course.png"
-                        alt="Lhasa CC Premium Golf Course"
+                        alt="Lassa GC Premium Golf Course"
                         fill
                         className="object-cover scale-105 animate-pulse-slow brightness-[105%] contrast-[95%]"
                         priority
                     />
                     {/* Brighter overlay for light theme */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-[#f8faf9]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/20 to-transparent"></div>
                 </div>
 
                 <div className="relative z-10 text-center px-6 max-w-6xl">
@@ -122,7 +120,7 @@ export default function Home() {
             </section>
 
             {/* Schedule Section */}
-            <section id="schedule" className="py-40 px-6 max-w-7xl mx-auto relative content-container">
+            <section id="schedule" className="pt-16 pb-32 px-6 max-w-7xl mx-auto relative content-container">
                 <div className="absolute top-0 right-0 -z-10 opacity-[0.03] pointer-events-none">
                     <h2 className="text-[15rem] font-black leading-none uppercase text-[#1e3a2b]">Schedule</h2>
                 </div>
@@ -147,49 +145,52 @@ export default function Home() {
                     initial="initial"
                     whileInView="animate"
                     viewport={{ once: true }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
-                    {/* May Round */}
-                    <motion.div variants={fadeInUp} className="golf-card p-12 relative overflow-hidden group">
+                    {/* May 9 Round */}
+                    <motion.div variants={fadeInUp} className="golf-card p-12 relative overflow-hidden group border-t-8 border-[#b8860b]">
                         <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">05</div>
-                        <div className="inline-block p-3 rounded-2xl bg-[#1e3a2b]/5 text-[#1e3a2b] mb-8 font-serif italic text-2xl">
-                            대항식
+                        <div className="inline-flex items-center gap-3 mb-8">
+                            <span className="text-[#b8860b] text-xl font-bold">5월 9일</span>
+                            <span className="px-3 py-1 bg-black/5 rounded-full text-xs font-bold text-[#1e3a2b]">4팀 규모</span>
                         </div>
-                        <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">5월 라운드</h4>
-                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">생동하는 봄의 기운이 가득한 필드에서 시즌의 화려한 개막을 알리는 라운딩입니다.</p>
+                        <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">스프링 친선 라운드</h4>
+                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">따뜻한 5월의 필드에서 진행되는 동문 간의 친목 도모 라운드입니다.</p>
                         <div className="flex flex-col gap-2">
-                            <div className="text-[#2d5a27] font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                                <MapPin size={16} /> Lhasa CC
+                            <div className="text-[#2d5a27] font-black text-sm uppercase tracking-widest flex items-center gap-2 mt-auto">
+                                <MapPin size={16} /> Lassa GC
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Special Round */}
+                    {/* May 15 Special Round */}
                     <motion.div variants={fadeInUp} className="bg-[#1e3a2b] p-12 rounded-[2.5rem] text-white transform lg:scale-[1.05] shadow-2xl z-20 relative overflow-hidden group border-2 border-[#b8860b]/20">
                         <div className="text-[8rem] font-serif font-black opacity-[0.05] absolute -top-4 -right-4 italic">Event</div>
-                        <div className="inline-block p-3 rounded-2xl bg-white/10 text-[#d4af37] mb-8 font-serif italic text-2xl">
-                            스페셜
+                        <div className="inline-flex items-center gap-3 mb-8">
+                            <span className="text-[#d4af37] text-xl font-bold">5월 15일</span>
+                            <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold text-[#d4af37]">공식 행사</span>
                         </div>
-                        <h4 className="text-3xl font-bold mb-6 italic">스페셜 이벤트</h4>
-                        <p className="opacity-80 font-light mb-12 text-md leading-relaxed">정기 일정 사이, 테마가 있는 장소에서 진행되는 특별한 만남의 장입니다.</p>
+                        <h4 className="text-3xl font-bold mb-6 italic">정기모임 (본선)</h4>
+                        <p className="opacity-80 font-light mb-12 text-md leading-relaxed">연중 가장 큰 규모로 개최되는 경기고 89회 불어반 공식 정기 골프 모임입니다.</p>
                         <div className="flex flex-col gap-2">
-                            <div className="font-black text-sm uppercase tracking-widest flex items-center gap-2 text-[#d4af37]">
-                                <Calendar size={18} /> 일정 추후 공지
+                            <div className="font-black text-sm uppercase tracking-widest flex items-center gap-2 text-[#d4af37] mt-auto">
+                                <Calendar size={18} /> 일정 확정
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* November Round */}
-                    <motion.div variants={fadeInUp} className="golf-card p-12 relative overflow-hidden group">
+                    {/* November 17 Round */}
+                    <motion.div variants={fadeInUp} className="golf-card p-12 relative overflow-hidden group border-t-8 border-[#1e3a2b]">
                         <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">11</div>
-                        <div className="inline-block p-3 rounded-2xl bg-[#1e3a2b]/5 text-[#1e3a2b] mb-8 font-serif italic text-2xl">
-                            납회식
+                        <div className="inline-flex items-center gap-3 mb-8">
+                            <span className="text-[#1e3a2b] text-xl font-bold">11월 17일</span>
+                            <span className="px-3 py-1 bg-black/5 rounded-full text-xs font-bold text-[#1e3a2b]">4팀 규모</span>
                         </div>
-                        <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">11월 라운드</h4>
-                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">한 해를 마무리하며 가을의 정취 속에서 동문 간의 우애를 다지는 피날레 라운드입니다.</p>
+                        <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">납회식 페스티벌</h4>
+                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">한 해의 골프 시즌을 마무리하며 가을 정취 속에서 우애를 다지는 뜻깊은 라운드입니다.</p>
                         <div className="flex flex-col gap-2">
-                            <div className="text-[#2d5a27] font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                                <MapPin size={16} /> Lhasa CC
+                            <div className="text-[#2d5a27] font-black text-sm uppercase tracking-widest flex items-center gap-2 mt-auto">
+                                <MapPin size={16} /> Lassa GC
                             </div>
                         </div>
                     </motion.div>
@@ -214,14 +215,14 @@ export default function Home() {
                     >
                         <Image
                             src="/lhasa_cc_golf_course.png"
-                            alt="Lhasa CC Club House & Course"
+                            alt="Lassa GC Club House & Course"
                             fill
                             className="object-cover transition-transform duration-[2s] group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1e3a2b]/60 via-transparent to-transparent"></div>
                         <div className="absolute bottom-10 left-10">
                             <p className="text-[#d4af37] font-black uppercase tracking-[0.3em] text-[10px] mb-2">Venue</p>
-                            <h4 className="text-3xl font-bold font-serif italic text-white">Lhasa Country Club</h4>
+                            <h4 className="text-3xl font-bold font-serif italic text-white">Lassa Golf Club</h4>
                         </div>
                     </motion.div>
 
@@ -263,12 +264,54 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* Contact / Executive Board Section */}
+            <section id="contact" className="py-32 px-6 max-w-7xl mx-auto border-t border-black/5 mt-20">
+                <div className="text-center mb-16">
+                    <h2 className="text-4xl md:text-5xl font-bold font-serif mb-6 text-[#1e3a2b] tracking-tight">문의하기</h2>
+                    <p className="text-[#1e3a2b]/60 text-lg">골프회 운영 및 참석 관련 문의사항은 아래 임원진에게 연락 부탁드립니다.</p>
+                </div>
+
+                {/* Executives Layout */}
+                <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+                    {/* Current Executives */}
+                    <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                        <div className="bg-white border text-center border-[#1e3a2b]/10 rounded-full px-12 py-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="text-[11px] font-black uppercase text-[#2d5a27] tracking-widest mb-1">회장</div>
+                            <div className="text-[#1e3a2b] font-bold text-xl">황승용</div>
+                        </div>
+                        <div className="bg-white border text-center border-[#1e3a2b]/10 rounded-full px-12 py-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="text-[11px] font-black uppercase text-[#2d5a27] tracking-widest mb-1">총무</div>
+                            <div className="text-[#1e3a2b] font-bold text-xl">강정석</div>
+                        </div>
+                    </div>
+
+                    {/* Past Executives */}
+                    <div className="flex flex-wrap justify-center gap-3 md:gap-4 mt-6">
+                        <div className="bg-white/50 border text-center border-[#1e3a2b]/5 rounded-3xl px-8 py-4">
+                            <div className="text-[10px] font-black uppercase text-[#1e3a2b]/40 tracking-widest mb-1">이전 총무</div>
+                            <div className="text-[#1e3a2b]/80 font-bold text-lg">박청산</div>
+                        </div>
+                        <div className="bg-white/50 border text-center border-[#1e3a2b]/5 rounded-3xl px-8 py-4">
+                            <div className="text-[10px] font-black uppercase text-[#1e3a2b]/40 tracking-widest mb-1">이전 총무</div>
+                            <div className="text-[#1e3a2b]/80 font-bold text-lg">안수용</div>
+                        </div>
+                        <div className="bg-white/50 border text-center border-[#1e3a2b]/5 rounded-3xl px-8 py-4">
+                            <div className="text-[10px] font-black uppercase text-[#1e3a2b]/40 tracking-widest mb-1">이전 총무</div>
+                            <div className="text-[#1e3a2b]/80 font-bold text-lg">김동익</div>
+                        </div>
+                        <div className="bg-white/50 border text-center border-[#1e3a2b]/5 rounded-3xl px-8 py-4">
+                            <div className="text-[10px] font-black uppercase text-[#1e3a2b]/40 tracking-widest mb-1">이전 총무</div>
+                            <div className="text-[#1e3a2b]/80 font-bold text-lg">박세윤</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
             {/* Footer */}
             <footer className="py-32 px-12 border-t border-black/5 relative bg-white">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-20">
                     <div className="lg:col-span-2">
                         <div className="text-3xl font-black tracking-tighter text-[#1e3a2b] font-serif mb-8 flex items-center gap-3">
-                        KGHS 89 <span className="text-[#b8860b] italic font-normal">FRENCH CLUB</span>
+                            KGHS 89 <span className="text-[#b8860b] italic font-normal">FRENCH CLUB</span>
                         </div>
                         <p className="opacity-40 text-sm leading-relaxed max-w-sm mb-12 text-[#1e3a2b]">
                             경기고등학교 89회 불어반 동문들을 위한 고품격 골프 커뮤니티입니다.
