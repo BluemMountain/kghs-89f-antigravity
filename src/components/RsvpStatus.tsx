@@ -46,9 +46,9 @@ export default function RsvpStatus() {
     return (
         <section id="rsvp" className="py-20 px-6 max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-                <div>
+                <div className="lg:sticky lg:top-10">
                     <h3 className="text-[#b8860b] uppercase tracking-widest text-sm mb-4 font-bold">Registration</h3>
-                    <h2 className="text-4xl md:text-5xl font-bold italic mb-8 text-[#1e3a2b] font-serif">현재 참석 현황</h2>
+                    <h2 className="text-4xl md:text-5xl font-bold italic mb-8 text-[#1e3a2b] font-serif">현재 신청 현황</h2>
                     <p className="text-[#1e3a2b]/60 mb-12 max-w-md leading-relaxed">
                         <span className="font-bold text-[#1e3a2b]">{round.title}</span><br />
                         ({new Date(round.round_date).toLocaleDateString('ko-KR')}) 라운딩 참석 명단입니다.<br />
@@ -63,40 +63,58 @@ export default function RsvpStatus() {
                     </button>
                 </div>
 
-                <div className="golf-card overflow-hidden">
-                    <div className="p-8 bg-[#1e3a2b]/5 border-b border-[#1e3a2b]/10 flex justify-between items-center">
+                <div className="lg:col-span-1">
+                    <div className="flex justify-between items-center mb-6">
                         <span className="font-bold flex items-center gap-2 text-[#1e3a2b] italic"> <Users size={18} /> 참석자 명단</span>
                         <span className="text-[10px] text-[#1e3a2b]/40 uppercase tracking-widest font-black">{rsvps.length} Entries</span>
                     </div>
-                    <div className="max-h-[450px] overflow-y-auto p-6 space-y-4 custom-scrollbar">
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4">
                         {rsvps.map((rsvp, idx) => (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
+                                transition={{ delay: idx * 0.03 }}
                                 key={rsvp.id}
-                                className="flex items-center justify-between p-5 bg-[#f8faf9] rounded-2xl hover:bg-[#1e3a2b]/5 transition-all border border-[#1e3a2b]/5 group"
+                                className="bg-white rounded-2xl p-5 shadow-sm border border-[#1e3a2b]/5 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md transition-all"
                             >
-                                <div className="flex items-center gap-5">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black shadow-sm ${rsvp.status === 'attend' ? 'bg-[#1e3a2b] text-white' : 'bg-white text-[#1e3a2b]/20 border border-[#1e3a2b]/10'}`}>
-                                        {rsvp.name[0]}
-                                    </div>
-                                    <div>
-                                        <div className="font-black text-[#1e3a2b]">{rsvp.name}</div>
-                                        {rsvp.sponsor_item && (
-                                            <div className="text-[11px] text-[#b8860b] flex items-center gap-1.5 mt-1 font-bold">
-                                                <Gift size={12} /> {rsvp.sponsor_item}
-                                            </div>
-                                        )}
+                                <div className="flex justify-between items-start">
+                                    <div className="font-black text-lg text-[#1e3a2b]">{rsvp.name}</div>
+                                    <div className={`text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tight ${rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27]' : 'bg-black/5 text-black/30'}`}>
+                                        {rsvp.status === 'attend' ? '참석확정' : '불참'}
                                     </div>
                                 </div>
-                                <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27]' : 'bg-black/5 text-black/30'}`}>
-                                    {rsvp.status === 'attend' ? 'Confirmed' : 'Absent'}
+
+                                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-black/5">
+                                    <div className="text-center group-hover:scale-105 transition-transform">
+                                        <div className="text-[9px] text-black/40 font-bold mb-1">25년 핸디</div>
+                                        <div className="text-sm font-black text-[#2d5a27]">
+                                            {rsvp.member_handicap || '-'}
+                                        </div>
+                                    </div>
+                                    <div className="text-center border-x border-black/5 group-hover:scale-105 transition-transform">
+                                        <div className="text-[9px] text-black/40 font-bold mb-1">이전 스코어</div>
+                                        <div className="text-sm font-black text-[#b8860b]">
+                                            {rsvp.last_score || '-'}
+                                        </div>
+                                    </div>
+                                    <div className="text-center group-hover:scale-105 transition-transform">
+                                        <div className="text-[9px] text-black/40 font-bold mb-1">26년 핸디</div>
+                                        <div className="text-sm font-black text-[#3b82f6]">
+                                            {rsvp.last_score ? (parseFloat(rsvp.last_score).toFixed(1)) : '-'}
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {rsvp.sponsor_item && (
+                                    <div className="text-[10px] text-[#b8860b] flex items-center gap-1.5 mt-1 font-bold bg-[#b8860b]/5 p-2 rounded-lg">
+                                        <Gift size={12} /> {rsvp.sponsor_item}
+                                    </div>
+                                )}
                             </motion.div>
                         ))}
                         {rsvps.length === 0 && (
-                            <div className="py-24 text-center text-[#1e3a2b]/30 text-sm italic font-serif">아직 신청자가 없습니다.</div>
+                            <div className="col-span-full py-24 text-center text-[#1e3a2b]/30 text-sm italic font-serif">아직 신청자가 없습니다.</div>
                         )}
                     </div>
                 </div>

@@ -20,11 +20,31 @@ export async function getUpcomingRound() {
 
 export async function getRsvps(roundId: number) {
     try {
-        return await sql`
-      SELECT * FROM rsvps 
-      WHERE round_id = ${roundId} 
-      ORDER BY created_at DESC
-    `;
+        const rsvps = await sql`
+            SELECT r.*, m.handicap as member_handicap
+            FROM rsvps r
+            LEFT JOIN members m ON r.name = m.name
+            WHERE r.round_id = ${roundId}
+            ORDER BY r.created_at DESC
+        `;
+
+        // Fetch all scores once to avoid N+1 if possible, but for simplicity and since the list is small (20-30), 
+        // we can do individual lookups or a single join if we prefer.
+        // Let's do a single join for better performance.
+        const rsvpsWithScores = await Promise.all(rsvps.map(async (rsvp) => {
+            const lastScoreMatch = await sql`
+                SELECT score FROM round_scores 
+                WHERE member_name = ${rsvp.name}
+                ORDER BY id DESC
+                LIMIT 1
+            `;
+            return {
+                ...rsvp,
+                last_score: lastScoreMatch[0]?.score || null
+            };
+        }));
+
+        return rsvpsWithScores;
     } catch (error) {
         console.error('Error fetching RSVPs:', error);
         return [];

@@ -16,10 +16,6 @@ body {
     background: var(--background);
 }
 
-a {
-    color: inherit;
-    text-decoration: none;
-}
 
 .glass {
     background: var(--card-bg);
