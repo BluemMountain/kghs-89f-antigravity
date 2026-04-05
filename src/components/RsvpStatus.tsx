@@ -44,80 +44,93 @@ export default function RsvpStatus() {
     const attendeeCount = rsvps.filter(r => r.status === 'attend').length;
 
     return (
-        <section id="rsvp" className="py-20 px-6 max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-                <div className="lg:sticky lg:top-10">
-                    <h3 className="text-[#b8860b] uppercase tracking-widest text-sm mb-4 font-bold">Registration</h3>
-                    <h2 className="text-4xl md:text-5xl font-bold italic mb-8 text-[#1e3a2b] font-serif">현재 신청 현황</h2>
-                    <p className="text-[#1e3a2b]/60 mb-12 max-w-md leading-relaxed">
-                        <span className="font-bold text-[#1e3a2b]">{round.title}</span><br />
-                        ({new Date(round.round_date).toLocaleDateString('ko-KR')}) 라운딩 참석 명단입니다.<br />
-                        현재 <span className="text-[#2d5a27] font-black text-2xl mx-1 underline underline-offset-4 decoration-[#2d5a27]/20">{attendeeCount}명</span>의 원우님이 확정하셨습니다.
-                    </p>
-
+        <section id="rsvp" className="py-24 px-6 max-w-7xl mx-auto">
+            <div className="text-center mb-20">
+                <motion.h2 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="text-5xl md:text-6xl font-black mb-8 text-[#1e3a2b] font-serif italic"
+                >
+                    신청 현황
+                </motion.h2>
+                <motion.p 
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 }}
+                    className="text-[#1e3a2b]/60 text-lg mb-16"
+                >
+                    각 월별 라운딩 신청 현황 및 참가자 정보입니다.
+                </motion.p>
+                
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center sm:items-end pb-5 border-b-2 border-[#2d5a27]/20 mb-12">
+                    <div className="text-left w-full sm:w-auto">
+                        <div className="text-2xl font-serif italic font-black text-[#1e3a2b] flex flex-wrap items-baseline gap-3">
+                            {new Date(round.round_date).getMonth() + 1}월 {new Date(round.round_date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}
+                            <span className="text-lg font-sans font-bold text-[#1e3a2b]/40">
+                                (총 {rsvps.length} 명 / 참석 {attendeeCount}명)
+                            </span>
+                        </div>
+                    </div>
+                    
                     <button
                         onClick={() => setShowModal(true)}
-                        className="bg-[#1e3a2b] text-white px-10 py-5 rounded-full font-bold hover:bg-[#b8860b] transition-all shadow-xl shadow-[#1e3a2b]/20 flex items-center gap-3 group"
+                        className="mt-6 sm:mt-0 bg-[#1e3a2b] text-white px-8 py-4 rounded-full font-black hover:bg-[#b8860b] transition-all shadow-xl shadow-[#1e3a2b]/20 flex items-center gap-3 group text-xs uppercase tracking-widest"
                     >
-                        <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /> 지금 신청하기
+                        <Send size={14} /> 지금 신청하기
                     </button>
                 </div>
+            </div>
 
-                <div className="lg:col-span-1">
-                    <div className="flex justify-between items-center mb-6">
-                        <span className="font-bold flex items-center gap-2 text-[#1e3a2b] italic"> <Users size={18} /> 참석자 명단</span>
-                        <span className="text-[10px] text-[#1e3a2b]/40 uppercase tracking-widest font-black">{rsvps.length} Entries</span>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {rsvps.map((rsvp, idx) => (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: (idx % 3) * 0.1 }}
+                        key={rsvp.id}
+                        className="bg-white rounded-[2rem] p-8 shadow-sm border border-[#1e3a2b]/5 flex flex-col gap-6 relative overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                    >
+                        <div className="flex justify-between items-center">
+                            <div className="font-black text-2xl text-[#1e3a2b]">{rsvp.name}</div>
+                            <div className={`text-[11px] font-black uppercase tracking-widest ${rsvp.status === 'attend' ? 'text-[#2d5a27]' : 'text-black/30'}`}>
+                                {rsvp.status === 'attend' ? '참석확정' : '불참'}
+                            </div>
+                        </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4">
-                        {rsvps.map((rsvp, idx) => (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.03 }}
-                                key={rsvp.id}
-                                className="bg-white rounded-2xl p-5 shadow-sm border border-[#1e3a2b]/5 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md transition-all"
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div className="font-black text-lg text-[#1e3a2b]">{rsvp.name}</div>
-                                    <div className={`text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-tight ${rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27]' : 'bg-black/5 text-black/30'}`}>
-                                        {rsvp.status === 'attend' ? '참석확정' : '불참'}
-                                    </div>
+                        <div className="grid grid-cols-3 gap-0 pt-1">
+                            <div className="flex flex-col gap-2">
+                                <div className="text-[10px] text-black/40 font-bold uppercase tracking-tight">25년 핸디</div>
+                                <div className="text-2xl font-black text-[#2d5a27]/80">
+                                    {rsvp.member_handicap || '-'}
                                 </div>
-
-                                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-black/5">
-                                    <div className="text-center group-hover:scale-105 transition-transform">
-                                        <div className="text-[9px] text-black/40 font-bold mb-1">25년 핸디</div>
-                                        <div className="text-sm font-black text-[#2d5a27]">
-                                            {rsvp.member_handicap || '-'}
-                                        </div>
-                                    </div>
-                                    <div className="text-center border-x border-black/5 group-hover:scale-105 transition-transform">
-                                        <div className="text-[9px] text-black/40 font-bold mb-1">이전 스코어</div>
-                                        <div className="text-sm font-black text-[#b8860b]">
-                                            {rsvp.last_score || '-'}
-                                        </div>
-                                    </div>
-                                    <div className="text-center group-hover:scale-105 transition-transform">
-                                        <div className="text-[9px] text-black/40 font-bold mb-1">26년 핸디</div>
-                                        <div className="text-sm font-black text-[#3b82f6]">
-                                            {rsvp.last_score ? (parseFloat(rsvp.last_score).toFixed(1)) : '-'}
-                                        </div>
-                                    </div>
+                            </div>
+                            <div className="flex flex-col gap-2 border-x border-black/5 px-2 text-center">
+                                <div className="text-[10px] text-black/40 font-bold uppercase tracking-tight">이전 스코어</div>
+                                <div className="text-2xl font-black text-[#b8860b]">
+                                    {rsvp.last_score || '-'}
                                 </div>
+                            </div>
+                            <div className="flex flex-col gap-2 text-right">
+                                <div className="text-[10px] text-black/40 font-bold uppercase tracking-tight">26년 핸디</div>
+                                <div className="text-2xl font-black text-[#3b82f6]">
+                                    {rsvp.last_score ? (parseFloat(rsvp.last_score).toFixed(1)) : '-'}
+                                </div>
+                            </div>
+                        </div>
 
-                                {rsvp.sponsor_item && (
-                                    <div className="text-[10px] text-[#b8860b] flex items-center gap-1.5 mt-1 font-bold bg-[#b8860b]/5 p-2 rounded-lg">
-                                        <Gift size={12} /> {rsvp.sponsor_item}
-                                    </div>
-                                )}
-                            </motion.div>
-                        ))}
-                        {rsvps.length === 0 && (
-                            <div className="col-span-full py-24 text-center text-[#1e3a2b]/30 text-sm italic font-serif">아직 신청자가 없습니다.</div>
+                        {rsvp.sponsor_item && (
+                            <div className="text-[11px] text-[#b8860b] flex items-center gap-2 mt-2 font-black bg-[#b8860b]/5 p-3 rounded-xl border border-[#b8860b]/10">
+                                <Gift size={14} /> {rsvp.sponsor_item}
+                            </div>
                         )}
-                    </div>
-                </div>
+                    </motion.div>
+                ))}
+                {rsvps.length === 0 && (
+                    <div className="col-span-full py-24 text-center text-[#1e3a2b]/30 text-sm italic font-serif">아직 신청자가 없습니다.</div>
+                )}
             </div>
 
             {/* RSVP Modal */}
