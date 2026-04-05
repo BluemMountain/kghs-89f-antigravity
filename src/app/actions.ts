@@ -188,6 +188,15 @@ export async function addRound(formData: FormData) {
     const status = formData.get('status') as string || 'upcoming';
 
     try {
+        // Check for duplicates
+        const existing = await sql`
+            SELECT id FROM rounds 
+            WHERE title = ${title} AND round_date = ${date}
+        `;
+        if (existing.length > 0) {
+            return { success: false, error: '이미 동일한 제목과 날짜의 라운드가 존재합니다.' };
+        }
+
         await sql`
             INSERT INTO rounds (title, round_date, status)
             VALUES (${title}, ${date}, ${status})

@@ -387,7 +387,7 @@ function RoundManagementView({ rounds, refresh }: any) {
                             </div>
                             <button
                                 onClick={() => handleDelete(round.id)}
-                                className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 text-black/20 hover:text-red-500 rounded-lg transition-all"
+                                className="opacity-30 hover:opacity-100 p-2 hover:bg-red-50 text-red-700 rounded-lg transition-all"
                             >
                                 <Trash2 size={20} />
                             </button>
