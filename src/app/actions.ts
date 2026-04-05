@@ -199,6 +199,65 @@ export async function addRound(formData: FormData) {
     }
 }
 
+export async function getRoundParticipants(roundId: number) {
+    try {
+        return await sql`
+            SELECT name FROM rsvps 
+            WHERE round_id = ${roundId} AND status = 'attend'
+            ORDER BY name ASC
+        `;
+    } catch (error) {
+        console.error('Error fetching participants:', error);
+        return [];
+    }
+}
+
+export async function finalizeRound(roundId: number, scores: { name: string, score: number }[]) {
+    try {
+        const round = await sql`SELECT * FROM rounds WHERE id = ${roundId}`;
+        if (round.length === 0) throw new Error('Round not found');
+
+        const { title, round_date, location } = round[0];
+
+        // 1. Create past_round
+        const [pastRound] = await sql`
+            INSERT INTO past_rounds (round_date, course_name)
+            VALUES (${new Date(round_date).toLocaleDateString('ko-KR')}, ${location || title})
+            RETURNING id
+        `;
+
+        // 2. Insert scores and update member handicaps
+        for (const s of scores) {
+            // Insert score
+            await sql`
+                INSERT INTO round_scores (round_id, member_name, score)
+                VALUES (${pastRound.id}, ${s.name}, ${s.score})
+            `;
+
+            // Calculate new average handicap
+            const memberScores = await sql`
+                SELECT score FROM round_scores WHERE member_name = ${s.name}
+            `;
+            
+            if (memberScores.length > 0) {
+                const avg = memberScores.reduce((acc, curr: any) => acc + curr.score, 0) / memberScores.length;
+                await sql`
+                    UPDATE members SET handicap = ${avg.toFixed(1)} WHERE name = ${s.name}
+                `;
+            }
+        }
+
+        // 3. Delete upcoming round
+        await sql`DELETE FROM rounds WHERE id = ${roundId}`;
+
+        revalidatePath('/');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error finalizing round:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function deleteRound(id: number) {
     try {
         await sql`DELETE FROM rounds WHERE id = ${id}`;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound } from '@/app/actions';
+import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound, getRoundParticipants, finalizeRound } from '@/app/actions';
 import ScoreHistoryTable from '@/components/ScoreHistoryTable';
 import {
     LayoutDashboard,
@@ -353,6 +353,7 @@ function MemberManagementView({ members, refresh }: any) {
 
 function RoundManagementView({ rounds, refresh }: any) {
     const [isAdding, setIsAdding] = useState(false);
+    const [selectedRound, setSelectedRound] = useState<any>(null);
 
     const handleDelete = async (id: number) => {
         if (confirm('정말 삭제하시겠습니까?')) {
@@ -393,13 +394,21 @@ function RoundManagementView({ rounds, refresh }: any) {
                         </div>
                         <div className="flex items-center gap-4 text-black/50 text-sm">
                             <div className="flex items-center gap-2">
-                                <Calendar size={16} /> {round.round_date}
+                                <Calendar size={16} /> {new Date(round.round_date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
                             </div>
                         </div>
+
+                        {round.status === 'upcoming' && (
+                            <button
+                                onClick={() => setSelectedRound(round)}
+                                className="mt-6 w-full py-3 bg-[#2d5a27]/5 text-[#2d5a27] rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-[#2d5a27] hover:text-white transition-all flex items-center justify-center gap-2"
+                            >
+                                <Trophy size={14} /> Enter Scores & Finalize
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>
-
             <AnimatePresence>
                 {isAdding && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
@@ -446,6 +455,147 @@ function RoundManagementView({ rounds, refresh }: any) {
                     </div>
                 )}
             </AnimatePresence>
+
+            <AnimatePresence>
+                {selectedRound && (
+                    <ScoreEntryModal
+                        round={selectedRound}
+                        onClose={() => setSelectedRound(null)}
+                        refresh={() => {
+                            setSelectedRound(null);
+                            refresh();
+                        }}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
+    );
+}
+
+function ScoreEntryModal({ round, onClose, refresh }: any) {
+    const [participants, setParticipants] = useState<any[]>([]);
+    const [scores, setScores] = useState<{ [key: string]: number }>({});
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchParticipants() {
+            const list = await getRoundParticipants(round.id);
+            setParticipants(list);
+            const initialScores: any = {};
+            list.forEach((p: any) => initialScores[p.name] = 0);
+            setScores(initialScores);
+            setLoading(false);
+        }
+        fetchParticipants();
+    }, [round.id]);
+
+    const handleScoreChange = (name: string, value: string) => {
+        setScores(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+    };
+
+    const getWinners = () => {
+        return Object.entries(scores)
+            .filter(([_, s]) => s > 0)
+            .sort((a, b) => a[1] - b[1])
+            .slice(0, 3);
+    };
+
+    const winners = getWinners();
+
+    const handleSubmit = async () => {
+        const scoreList = Object.entries(scores).map(([name, score]) => ({ name, score }));
+        if (scoreList.some(s => s.score === 0)) {
+            if (!confirm('점수가 0인 인원이 있습니다. 그대로 진행하시겠습니까?')) return;
+        }
+
+        const res = await finalizeRound(round.id, scoreList);
+        if (res.success) {
+            refresh();
+        } else {
+            alert('오류 발생: ' + res.error);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#1e3a2b]/40 backdrop-blur-md">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative overflow-hidden"
+            >
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#2d5a27] via-[#b8860b] to-[#2d5a27]"></div>
+
+                <div className="flex justify-between items-start mb-8 text-black">
+                    <div>
+                        <h3 className="text-3xl font-black font-serif italic text-[#1e3a2b]">Round Finalize</h3>
+                        <p className="text-black/40 text-sm mt-1">{round.title} 스코어 입력 및 종료</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
+                        <X size={24} className="text-black/20" />
+                    </button>
+                </div>
+
+                {loading ? (
+                    <div className="py-20 flex justify-center text-black/80">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2d5a27]"></div>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {winners.length > 0 && (
+                            <div className="bg-[#2d5a27]/5 rounded-2xl p-6 border border-[#2d5a27]/10 flex justify-between items-center">
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Winner Preview</div>
+                                <div className="flex gap-4">
+                                    {winners.map(([name, score], i) => (
+                                        <div key={name} className="flex flex-col items-center">
+                                            <div className="text-[10px] font-black opacity-30 uppercase tracking-widest">{i + 1}st</div>
+                                            <div className="text-sm font-bold text-[#1e3a2b]">{name} <span className="text-[#b8860b]">{score}</span></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar text-black/80">
+                            <div className="grid grid-cols-1 gap-3">
+                                {participants.map((p: any) => (
+                                    <div key={p.name} className="flex items-center justify-between p-4 bg-black/5 rounded-2xl border border-transparent hover:border-[#2d5a27]/20 transition-all">
+                                        <div className="font-bold text-[#1e3a2b]">{p.name}</div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] uppercase font-black tracking-widest opacity-30">Score</span>
+                                            <input
+                                                type="number"
+                                                value={scores[p.name] || ''}
+                                                onChange={(e) => handleScoreChange(p.name, e.target.value)}
+                                                className="w-24 bg-white border border-black/5 rounded-xl px-4 py-2 text-center font-black text-[#2d5a27] focus:outline-none focus:border-[#2d5a27]"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                                {participants.length === 0 && (
+                                    <div className="text-center py-10 opacity-30 italic">참석 신청자가 없습니다.</div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-black/5 flex gap-4">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 px-8 py-4 rounded-xl font-bold text-black/40 hover:bg-black/5 transition-all text-sm uppercase tracking-widest"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={participants.length === 0}
+                                className="flex-1 px-8 py-4 rounded-xl font-bold bg-[#2d5a27] text-white hover:bg-[#b8860b] transition-all shadow-xl shadow-[#2d5a27]/10 text-sm uppercase tracking-widest disabled:opacity-50"
+                            >
+                                Finalize & Update Handicaps
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </motion.div>
+        </div>
     );
 }
