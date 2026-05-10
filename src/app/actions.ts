@@ -256,7 +256,8 @@ export async function finalizeRound(roundId: number, scores: { name: string, sco
             }
         }
 
-        // 3. Delete upcoming round
+        // 3. Delete upcoming round and its RSVPs
+        await sql`DELETE FROM rsvps WHERE round_id = ${roundId}`;
         await sql`DELETE FROM rounds WHERE id = ${roundId}`;
 
         revalidatePath('/');
@@ -269,6 +270,7 @@ export async function finalizeRound(roundId: number, scores: { name: string, sco
 
 export async function deleteRound(id: number) {
     try {
+        await sql`DELETE FROM rsvps WHERE round_id = ${id}`;
         await sql`DELETE FROM rounds WHERE id = ${id}`;
         revalidatePath('/');
         return { success: true };
