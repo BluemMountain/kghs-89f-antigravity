@@ -181,13 +181,14 @@ export default function Home() {
 
                     {/* November 17 Round */}
                     <motion.div variants={fadeInUp} className="golf-card p-12 relative overflow-hidden group border-t-8 border-[#1e3a2b]">
-                        <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">11</div>
+                        <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">10</div>
                         <div className="inline-flex items-center gap-3 mb-8">
-                            <span className="text-[#1e3a2b] text-xl font-bold">11월 17일</span>
+                            <span className="text-[#1e3a2b] text-xl font-bold">10월 31일</span>
                             <span className="px-3 py-1 bg-black/5 rounded-full text-xs font-bold text-[#1e3a2b]">4팀 규모</span>
                         </div>
                         <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">납회식 페스티벌</h4>
-                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">한 해의 골프 시즌을 마무리하며 가을 정취 속에서 우애를 다지는 뜻깊은 라운드입니다.</p>
+                        <p className="opacity-60 font-light mb-4 text-md leading-relaxed text-[#1e3a2b]">한 해의 골프 시즌을 마무리하며 가을 정취 속에서 우애를 다지는 뜻깊은 라운드입니다.</p>
+                        <p className="text-[#2d5a27] font-bold mb-12 text-md leading-relaxed">핸디를 참고하여 청/백 전 진행 예정</p>
                         <div className="flex flex-col gap-2">
                             <div className="text-[#2d5a27] font-black text-sm uppercase tracking-widest flex items-center gap-2 mt-auto">
                                 <MapPin size={16} /> Lassa GC
