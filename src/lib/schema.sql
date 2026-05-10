@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS gallery (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert Initial Round Data (5월, 11월)
+-- Insert Initial Round Data (5월, 10월)
 INSERT INTO rounds (title, round_date, description) VALUES 
 ('5월 대항식 라운드', '2026-05-27', '시즌 오픈 정기 라운딩'),
-('11월 납회식 라운드', '2026-11-25', '시즌 종료 정기 라운딩');
+('10월 납회식 라운드', '2026-10-31', '시즌 종료 정기 라운딩');
