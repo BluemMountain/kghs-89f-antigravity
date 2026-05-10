@@ -132,7 +132,7 @@ export async function submitRsvp(formData: FormData) {
       INSERT INTO rsvps (round_id, name, status, sponsor_item, comment)
       VALUES (${roundId}, ${name}, ${status}, ${sponsorItem}, ${comment})
     `;
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -151,7 +151,7 @@ export async function addMember(formData: FormData) {
             INSERT INTO members (name, handicap, role)
             VALUES (${name}, ${handicap}, ${role})
         `;
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -165,7 +165,7 @@ export async function updateMember(id: number, data: any) {
             SET name = ${data.name}, handicap = ${data.handicap}, role = ${data.role}
             WHERE id = ${id}
         `;
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -175,7 +175,7 @@ export async function updateMember(id: number, data: any) {
 export async function deleteMember(id: number) {
     try {
         await sql`DELETE FROM members WHERE id = ${id}`;
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -201,7 +201,7 @@ export async function addRound(formData: FormData) {
             INSERT INTO rounds (title, round_date, status)
             VALUES (${title}, ${date}, ${status})
         `;
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -260,7 +260,7 @@ export async function finalizeRound(roundId: number, scores: { name: string, sco
         await sql`DELETE FROM rsvps WHERE round_id = ${roundId}`;
         await sql`DELETE FROM rounds WHERE id = ${roundId}`;
 
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         console.error('Error finalizing round:', error);
@@ -272,7 +272,7 @@ export async function deleteRound(id: number) {
     try {
         await sql`DELETE FROM rsvps WHERE round_id = ${id}`;
         await sql`DELETE FROM rounds WHERE id = ${id}`;
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         return { success: false, error: error.message };
