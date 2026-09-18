@@ -14,10 +14,13 @@ async function run() {
     const url = getDatabaseUrl();
     if (!url) { console.error('No DB URL'); return; }
     const sql = neon(url);
+    await sql`
+        UPDATE rounds 
+        SET title = '납회식 (백 vs 흑 대전)', round_date = '2026-10-31' 
+        WHERE id = 2
+    `;
     const rounds = await sql`SELECT id, title, round_date FROM rounds`;
-    const rsvps = await sql`SELECT round_id, name, status FROM rsvps`;
-    console.log('ROUNDS:', JSON.stringify(rounds, null, 2));
-    console.log('RSVPS:', JSON.stringify(rsvps, null, 2));
+    console.log('UPDATED ROUNDS:', JSON.stringify(rounds, null, 2));
 }
 
 run();

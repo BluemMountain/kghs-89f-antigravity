@@ -179,15 +179,39 @@ export default function Home() {
                         </div>
                     </motion.div>
 
-                    {/* November 17 Round */}
-                    <motion.div variants={fadeInUp} className="golf-card p-12 relative overflow-hidden group border-t-8 border-[#1e3a2b]">
-                        <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">11</div>
-                        <div className="inline-flex items-center gap-3 mb-8">
-                            <span className="text-[#1e3a2b] text-xl font-bold">11월 17일</span>
-                            <span className="px-3 py-1 bg-black/5 rounded-full text-xs font-bold text-[#1e3a2b]">4팀 규모</span>
+                    {/* October 31 Round (납회식 백 vs 흑 대전) */}
+                    <motion.div variants={fadeInUp} className="golf-card p-10 relative overflow-hidden group border-t-8 border-[#1e3a2b]">
+                        <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">10</div>
+                        <div className="inline-flex flex-wrap items-center gap-2.5 mb-6">
+                            <span className="text-[#1e3a2b] text-xl font-bold">10월 31일</span>
+                            <span className="px-3 py-1 bg-[#1e3a2b]/10 rounded-full text-xs font-bold text-[#1e3a2b]">납회식</span>
+                            <span className="px-3 py-1 bg-[#b8860b]/10 rounded-full text-xs font-bold text-[#b8860b]">백 vs 흑 대전</span>
                         </div>
-                        <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">납회식 페스티벌</h4>
-                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">한 해의 골프 시즌을 마무리하며 가을 정취 속에서 우애를 다지는 뜻깊은 라운드입니다.</p>
+                        <h4 className="text-3xl font-bold mb-4 text-[#1e3a2b]">납회식 (백 vs 흑 대전)</h4>
+                        <p className="opacity-70 font-light mb-6 text-sm leading-relaxed text-[#1e3a2b]">
+                            한 해의 골프 시즌을 마무리하는 백팀과 흑팀의 라이벌 대전 라운드입니다.
+                        </p>
+
+                        {/* Team Line-up */}
+                        <div className="bg-black/5 p-4 rounded-2xl mb-6 space-y-3 text-xs border border-black/5">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                                <span className="px-2.5 py-1 bg-white text-black font-black rounded-lg border border-black/10 shrink-0 text-center w-max shadow-sm">
+                                    ⚪ 백팀 (6명)
+                                </span>
+                                <span className="font-bold text-[#1e3a2b] leading-relaxed">
+                                    한승훈, 강정석, 김천중, 황승용, 조명환, 김재우
+                                </span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 pt-2 border-t border-black/5">
+                                <span className="px-2.5 py-1 bg-[#1e3a2b] text-white font-black rounded-lg shrink-0 text-center w-max shadow-sm">
+                                    ⚫ 흑팀 (6명)
+                                </span>
+                                <span className="font-bold text-[#1e3a2b] leading-relaxed">
+                                    박청산, 안수용, 김동익, 마석용, 김준규, 박경배
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="flex flex-col gap-2">
                             <div className="text-[#2d5a27] font-black text-sm uppercase tracking-widest flex items-center gap-2 mt-auto">
                                 <MapPin size={16} /> Lassa GC

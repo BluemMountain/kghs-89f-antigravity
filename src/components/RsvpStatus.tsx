@@ -93,6 +93,58 @@ export default function RsvpStatus() {
                 </div>
             </div>
 
+            {/* 백 vs 흑 대전 팀 대진표 Banner */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="mb-12 bg-white rounded-[2.5rem] p-6 md:p-8 shadow-md border border-[#1e3a2b]/10"
+            >
+                <div className="text-center mb-6">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#b8860b]">Special Event Match</span>
+                    <h3 className="text-2xl md:text-3xl font-bold font-serif italic text-[#1e3a2b] mt-1">
+                        🏆 10월 31일 납회식 백 vs 흑 대전 대진표
+                    </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* 백팀 Card */}
+                    <div className="bg-[#f8faf9] p-5 rounded-2xl border-2 border-black/10 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-black/10 pb-3 mb-3">
+                            <div className="flex items-center gap-2">
+                                <span className="w-3.5 h-3.5 rounded-full bg-white border-2 border-black inline-block"></span>
+                                <span className="font-black text-lg text-[#1e3a2b]">백팀 (White Team)</span>
+                            </div>
+                            <span className="text-xs font-bold bg-white text-black px-3 py-1 rounded-full border border-black/10">6명</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {['한승훈', '강정석', '김천중', '황승용', '조명환', '김재우'].map(name => (
+                                <span key={name} className="px-3 py-1 bg-white rounded-xl text-xs font-bold text-[#1e3a2b] border border-black/5 shadow-xs">
+                                    {name}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 흑팀 Card */}
+                    <div className="bg-[#1e3a2b] text-white p-5 rounded-2xl border-2 border-[#1e3a2b] shadow-sm">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                            <div className="flex items-center gap-2">
+                                <span className="w-3.5 h-3.5 rounded-full bg-black border-2 border-white inline-block"></span>
+                                <span className="font-black text-lg text-white">흑팀 (Black Team)</span>
+                            </div>
+                            <span className="text-xs font-bold bg-white/20 text-white px-3 py-1 rounded-full border border-white/10">6명</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {['박청산', '안수용', '김동익', '마석용', '김준규', '박경배'].map(name => (
+                                <span key={name} className="px-3 py-1 bg-white/10 rounded-xl text-xs font-bold text-white border border-white/10 shadow-xs">
+                                    {name}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
             {/* 확정 조편성표 (Group List) */}
             {groupedKeys.length > 0 && (
                 <motion.div
