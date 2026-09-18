@@ -210,11 +210,28 @@ export async function addRound(formData: FormData) {
 
 export async function getRoundParticipants(roundId: number) {
     try {
-        return await sql`
-            SELECT name FROM rsvps 
-            WHERE round_id = ${roundId} AND status = 'attend'
-            ORDER BY name ASC
+        const list = await sql`
+            SELECT r.name, m.handicap as member_handicap
+            FROM rsvps r
+            LEFT JOIN members m ON r.name = m.name
+            WHERE r.round_id = ${roundId} AND r.status = 'attend'
+            ORDER BY r.name ASC
         `;
+
+        const listWithScores = await Promise.all(list.map(async (p: any) => {
+            const lastScoreMatch = await sql`
+                SELECT score FROM round_scores 
+                WHERE member_name = ${p.name}
+                ORDER BY id DESC
+                LIMIT 1
+            `;
+            return {
+                ...p,
+                last_score: lastScoreMatch[0]?.score || null
+            };
+        }));
+
+        return listWithScores;
     } catch (error) {
         console.error('Error fetching participants:', error);
         return [];
