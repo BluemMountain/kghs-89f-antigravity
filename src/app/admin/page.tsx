@@ -18,7 +18,8 @@ import {
     User,
     Lock,
     Trophy,
-    ClipboardList
+    ClipboardList,
+    GripVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -790,13 +791,34 @@ function RsvpManagementView() {
                     {/* 조별 현황 요약 카드 */}
                     {sortedGroupKeys.length > 0 && (
                         <div className="glass p-6 rounded-[2rem] bg-white/40 border border-black/5">
-                            <h3 className="text-sm font-black uppercase tracking-widest text-[#2d5a27] mb-4">
-                                조편성 현황 (Group Summary)
-                            </h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-sm font-black uppercase tracking-widest text-[#2d5a27]">
+                                    조편성 현황 (Group Summary)
+                                </h3>
+                                <span className="text-[10px] font-bold text-black/40">
+                                    💡 이름 선택 또는 드래그하여 조를 변경할 수 있습니다
+                                </span>
+                            </div>
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {sortedGroupKeys.map(gKey => (
-                                    <div key={gKey} className={`p-4 rounded-2xl border ${gKey === '미지정' ? 'bg-black/5 border-dashed border-black/10' : 'bg-white border-[#2d5a27]/20 shadow-sm'}`}>
-                                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-black/5">
+                                    <div
+                                        key={gKey}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            const rId = parseInt(e.dataTransfer.getData('text/plain'));
+                                            if (rId) {
+                                                handleGroupChange(rId, gKey === '미지정' ? '' : gKey);
+                                            }
+                                        }}
+                                        className={`p-4 rounded-2xl border transition-all ${
+                                            gKey === '미지정' 
+                                                ? 'bg-black/5 border-dashed border-black/10' 
+                                                : 'bg-white border-[#2d5a27]/20 shadow-sm hover:border-[#b8860b]'
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-center mb-3 pb-2 border-b border-black/5">
                                             <span className={`font-black text-sm ${gKey === '미지정' ? 'text-black/40' : 'text-[#2d5a27]'}`}>
                                                 {gKey}
                                             </span>
@@ -804,13 +826,42 @@ function RsvpManagementView() {
                                                 {groupedMap[gKey].length}명
                                             </span>
                                         </div>
-                                        <div className="space-y-1">
+
+                                        <div className="space-y-1.5 min-h-[40px]">
                                             {groupedMap[gKey].map((m: any) => (
-                                                <div key={m.id} className="text-xs font-bold text-[#1e3a2b] flex justify-between items-center">
-                                                    <span>{m.name}</span>
-                                                    <span className="text-[10px] text-black/30 font-medium">H: {m.member_handicap || '-'}</span>
+                                                <div
+                                                    key={m.id}
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        e.dataTransfer.setData('text/plain', m.id.toString());
+                                                    }}
+                                                    className="text-xs font-bold text-[#1e3a2b] flex justify-between items-center p-2 rounded-xl bg-black/5 hover:bg-[#2d5a27]/10 cursor-grab active:cursor-grabbing transition-all group/item border border-transparent hover:border-[#2d5a27]/20"
+                                                >
+                                                    <div className="flex items-center gap-1.5">
+                                                        <GripVertical size={12} className="text-black/30 group-hover/item:text-[#2d5a27]" />
+                                                        <span>{m.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-[10px] text-black/40 font-medium">H: {m.member_handicap || '-'}</span>
+                                                        <select
+                                                            value={m.group_name || ''}
+                                                            onChange={(e) => handleGroupChange(m.id, e.target.value)}
+                                                            className="text-[10px] bg-white border border-black/10 rounded px-1 py-0.5 font-bold text-[#2d5a27] cursor-pointer focus:outline-none"
+                                                        >
+                                                            <option value="">미지정</option>
+                                                            <option value="1조">1조</option>
+                                                            <option value="2조">2조</option>
+                                                            <option value="3조">3조</option>
+                                                            <option value="4조">4조</option>
+                                                            <option value="5조">5조</option>
+                                                            <option value="6조">6조</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
                                             ))}
+                                            {groupedMap[gKey].length === 0 && (
+                                                <div className="text-[11px] text-black/20 text-center py-2 italic font-serif">비어 있음</div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -824,7 +875,7 @@ function RsvpManagementView() {
                             <thead className="bg-[#2d5a27] text-white text-[10px] font-black uppercase tracking-widest">
                                 <tr>
                                     <th className="px-6 py-5 w-12">#</th>
-                                    <th className="px-6 py-5">이름</th>
+                                    <th className="px-6 py-5">이름 및 스코어 정보</th>
                                     <th className="px-6 py-5 text-center">상태</th>
                                     <th className="px-6 py-5 text-center">조편성</th>
                                     <th className="px-6 py-5 text-center">스폰서</th>
@@ -837,10 +888,20 @@ function RsvpManagementView() {
                                     <tr key={rsvp.id} className="hover:bg-white/40 transition-colors group">
                                         <td className="px-6 py-4 text-black/30 text-sm">{idx + 1}</td>
                                         <td className="px-6 py-4">
-                                            <span className="font-bold text-black/80 text-lg">{rsvp.name}</span>
-                                            {rsvp.name.length > 10 && (
-                                                <span className="ml-2 text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">이름 확인 필요</span>
-                                            )}
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                <span className="font-bold text-black/80 text-lg">{rsvp.name}</span>
+                                                {rsvp.name.length > 10 && (
+                                                    <span className="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">이름 확인 필요</span>
+                                                )}
+                                                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                                                    <span className="px-2.5 py-0.5 bg-[#2d5a27]/10 text-[#2d5a27] font-bold rounded-lg border border-[#2d5a27]/15">
+                                                        25년 핸디: {rsvp.member_handicap || '-'}
+                                                    </span>
+                                                    <span className="px-2.5 py-0.5 bg-[#b8860b]/10 text-[#b8860b] font-bold rounded-lg border border-[#b8860b]/15">
+                                                        이전 스코어: {rsvp.last_score ? `${rsvp.last_score}타` : '-'}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
