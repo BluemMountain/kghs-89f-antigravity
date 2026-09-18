@@ -223,8 +223,8 @@ export async function getRoundParticipants(roundId: number) {
 
 export async function finalizeRound(
     roundId: number,
-    scores: { name: string, score: number }[],
-    awards?: { winner?: string, runnerUp?: string, newPerio?: string, notes?: string }
+    participantData: { name: string, score: number, award?: string, note?: string }[],
+    overallNotes?: string
 ) {
     try {
         const round = await sql`SELECT * FROM rounds WHERE id = ${roundId}`;
@@ -232,15 +232,26 @@ export async function finalizeRound(
 
         const { title, round_date, location } = round[0];
 
-        // Ensure columns exist on past_rounds table
+        // Ensure columns exist on past_rounds and round_scores tables
         try {
             await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS winner VARCHAR(100)`;
             await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS runner_up VARCHAR(100)`;
             await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS new_perio VARCHAR(100)`;
             await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS notes TEXT`;
+            await sql`ALTER TABLE round_scores ADD COLUMN IF NOT EXISTS award VARCHAR(100)`;
+            await sql`ALTER TABLE round_scores ADD COLUMN IF NOT EXISTS note TEXT`;
         } catch (e) {
-            console.log('Columns may already exist:', e);
+            console.log('Columns check:', e);
         }
+
+        // Determine winner, runner_up, new_perio from participantData awards
+        const winnerObj = participantData.find(p => p.award && p.award.includes('우승') && !p.award.includes('준') && !p.award.includes('신페리오'));
+        const runnerUpObj = participantData.find(p => p.award && p.award.includes('준우승'));
+        const newPerioObj = participantData.find(p => p.award && p.award.includes('신페리오'));
+
+        const winnerName = winnerObj?.name || null;
+        const runnerUpName = runnerUpObj?.name || null;
+        const newPerioName = newPerioObj?.name || null;
 
         // 1. Create past_round
         const [pastRound] = await sql`
@@ -248,31 +259,29 @@ export async function finalizeRound(
             VALUES (
                 ${new Date(round_date).toLocaleDateString('ko-KR')}, 
                 ${location || title},
-                ${awards?.winner || null},
-                ${awards?.runnerUp || null},
-                ${awards?.newPerio || null},
-                ${awards?.notes || null}
+                ${winnerName},
+                ${runnerUpName},
+                ${newPerioName},
+                ${overallNotes || null}
             )
             RETURNING id
         `;
 
         // 2. Insert scores and update member handicaps
-        for (const s of scores) {
-            // Insert score
+        for (const p of participantData) {
             await sql`
-                INSERT INTO round_scores (round_id, member_name, score)
-                VALUES (${pastRound.id}, ${s.name}, ${s.score})
+                INSERT INTO round_scores (round_id, member_name, score, award, note)
+                VALUES (${pastRound.id}, ${p.name}, ${p.score}, ${p.award || null}, ${p.note || null})
             `;
 
-            // Calculate new average handicap
             const memberScores = await sql`
-                SELECT score FROM round_scores WHERE member_name = ${s.name}
+                SELECT score FROM round_scores WHERE member_name = ${p.name}
             `;
             
             if (memberScores.length > 0) {
                 const avg = memberScores.reduce((acc, curr: any) => acc + curr.score, 0) / memberScores.length;
                 await sql`
-                    UPDATE members SET handicap = ${avg.toFixed(1)} WHERE name = ${s.name}
+                    UPDATE members SET handicap = ${avg.toFixed(1)} WHERE name = ${p.name}
                 `;
             }
         }

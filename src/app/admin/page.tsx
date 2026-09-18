@@ -483,12 +483,9 @@ function RoundManagementView({ rounds, refresh }: any) {
 function ScoreEntryModal({ round, onClose, refresh }: any) {
     const [participants, setParticipants] = useState<any[]>([]);
     const [scores, setScores] = useState<{ [key: string]: number }>({});
-    const [awards, setAwards] = useState({
-        winner: '',
-        runnerUp: '',
-        newPerio: '',
-        notes: ''
-    });
+    const [awardsMap, setAwardsMap] = useState<{ [key: string]: string }>({});
+    const [notesMap, setNotesMap] = useState<{ [key: string]: string }>({});
+    const [overallNotes, setOverallNotes] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -507,8 +504,12 @@ function ScoreEntryModal({ round, onClose, refresh }: any) {
         setScores(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
     };
 
-    const handleAwardChange = (field: string, value: string) => {
-        setAwards(prev => ({ ...prev, [field]: value }));
+    const handleAwardChange = (name: string, value: string) => {
+        setAwardsMap(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleNoteChange = (name: string, value: string) => {
+        setNotesMap(prev => ({ ...prev, [name]: value }));
     };
 
     const getWinners = () => {
@@ -521,12 +522,17 @@ function ScoreEntryModal({ round, onClose, refresh }: any) {
     const winners = getWinners();
 
     const handleSubmit = async () => {
-        const scoreList = Object.entries(scores).map(([name, score]) => ({ name, score }));
-        if (scoreList.some(s => s.score === 0)) {
+        const participantData = participants.map((p: any) => ({
+            name: p.name,
+            score: scores[p.name] || 0,
+            award: awardsMap[p.name] || '',
+            note: notesMap[p.name] || ''
+        }));
+        if (participantData.some(s => s.score === 0)) {
             if (!confirm('점수가 0인 인원이 있습니다. 그대로 진행하시겠습니까?')) return;
         }
 
-        const res = await finalizeRound(round.id, scoreList, awards);
+        const res = await finalizeRound(round.id, participantData, overallNotes);
         if (res.success) {
             refresh();
         } else {
@@ -536,23 +542,27 @@ function ScoreEntryModal({ round, onClose, refresh }: any) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#1e3a2b]/40 backdrop-blur-md">
-            <datalist id="participant-list">
-                {participants.map((p: any) => (
-                    <option key={p.name} value={p.name} />
-                ))}
+            <datalist id="award-suggestions">
+                <option value="우승" />
+                <option value="준우승" />
+                <option value="신페리오 우승" />
+                <option value="메달리스트" />
+                <option value="롱기스트" />
+                <option value="니어리스트" />
+                <option value="행운상" />
             </datalist>
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative overflow-hidden"
+                className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-3xl shadow-2xl relative overflow-hidden"
             >
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#2d5a27] via-[#b8860b] to-[#2d5a27]"></div>
 
                 <div className="flex justify-between items-start mb-6 text-black">
                     <div>
                         <h3 className="text-3xl font-black font-serif italic text-[#1e3a2b]">Round Finalize</h3>
-                        <p className="text-black/40 text-sm mt-1">{round.title} 스코어 입력 및 종료</p>
+                        <p className="text-black/40 text-sm mt-1">{round.title} 스코어 및 수상 기록 입력</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
                         <X size={24} className="text-black/20" />
@@ -581,20 +591,45 @@ function ScoreEntryModal({ round, onClose, refresh }: any) {
                             )}
 
                             <div>
-                                <label className="text-[11px] font-black uppercase tracking-widest text-[#2d5a27] mb-3 block">참석자 스코어</label>
+                                <label className="text-[11px] font-black uppercase tracking-widest text-[#2d5a27] mb-3 block">참석자 스코어 및 수상/비고 입력</label>
                                 <div className="grid grid-cols-1 gap-3">
                                     {participants.map((p: any) => (
-                                        <div key={p.name} className="flex items-center justify-between p-4 bg-black/5 rounded-2xl border border-transparent hover:border-[#2d5a27]/20 transition-all">
-                                            <div className="font-bold text-[#1e3a2b]">{p.name}</div>
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-[10px] uppercase font-black tracking-widest opacity-30">Score</span>
-                                                <input
-                                                    type="number"
-                                                    value={scores[p.name] || ''}
-                                                    onChange={(e) => handleScoreChange(p.name, e.target.value)}
-                                                    className="w-24 bg-white border border-black/5 rounded-xl px-4 py-2 text-center font-black text-[#2d5a27] focus:outline-none focus:border-[#2d5a27]"
-                                                    placeholder="0"
-                                                />
+                                        <div key={p.name} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-black/5 rounded-2xl border border-transparent hover:border-[#2d5a27]/20 transition-all gap-3">
+                                            <div className="font-bold text-[#1e3a2b] min-w-[70px]">{p.name}</div>
+                                            <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
+                                                {/* 수상 선택/입력 */}
+                                                <div className="flex items-center gap-1.5 flex-1 min-w-[120px] max-w-[170px]">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-[#b8860b] whitespace-nowrap">수상</span>
+                                                    <input
+                                                        list="award-suggestions"
+                                                        value={awardsMap[p.name] || ''}
+                                                        onChange={(e) => handleAwardChange(p.name, e.target.value)}
+                                                        placeholder="수상 선택/입력"
+                                                        className="w-full bg-white border border-black/10 rounded-xl px-3 py-1.5 text-xs font-bold text-[#1e3a2b] focus:outline-none focus:border-[#b8860b]"
+                                                    />
+                                                </div>
+                                                {/* 기타 비고 */}
+                                                <div className="flex items-center gap-1.5 flex-1 min-w-[120px] max-w-[180px]">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-30 whitespace-nowrap">기타</span>
+                                                    <input
+                                                        type="text"
+                                                        value={notesMap[p.name] || ''}
+                                                        onChange={(e) => handleNoteChange(p.name, e.target.value)}
+                                                        placeholder="기타 내용"
+                                                        className="w-full bg-white border border-black/10 rounded-xl px-3 py-1.5 text-xs font-medium text-[#1e3a2b] focus:outline-none focus:border-[#2d5a27]"
+                                                    />
+                                                </div>
+                                                {/* 스코어 */}
+                                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                                    <span className="text-[10px] uppercase font-black tracking-widest opacity-30">SCORE</span>
+                                                    <input
+                                                        type="number"
+                                                        value={scores[p.name] || ''}
+                                                        onChange={(e) => handleScoreChange(p.name, e.target.value)}
+                                                        className="w-20 bg-white border border-black/10 rounded-xl px-3 py-1.5 text-center font-black text-[#2d5a27] focus:outline-none focus:border-[#2d5a27]"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -604,52 +639,13 @@ function ScoreEntryModal({ round, onClose, refresh }: any) {
                                 </div>
                             </div>
 
-                            {/* 수상 기록 (우승, 준우승, 신페리오 우승) */}
-                            <div className="bg-[#b8860b]/5 p-5 rounded-2xl border border-[#b8860b]/15 space-y-3">
-                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#b8860b]">
-                                    <Trophy size={16} /> 수상 기록 (선택)
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#1e3a2b]/50 block mb-1">우승</label>
-                                        <input
-                                            list="participant-list"
-                                            value={awards.winner}
-                                            onChange={(e) => handleAwardChange('winner', e.target.value)}
-                                            placeholder="우승자 성함"
-                                            className="w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1e3a2b] focus:outline-none focus:border-[#b8860b]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#1e3a2b]/50 block mb-1">준우승</label>
-                                        <input
-                                            list="participant-list"
-                                            value={awards.runnerUp}
-                                            onChange={(e) => handleAwardChange('runnerUp', e.target.value)}
-                                            placeholder="준우승자 성함"
-                                            className="w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1e3a2b] focus:outline-none focus:border-[#b8860b]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#1e3a2b]/50 block mb-1">신페리오 우승</label>
-                                        <input
-                                            list="participant-list"
-                                            value={awards.newPerio}
-                                            onChange={(e) => handleAwardChange('newPerio', e.target.value)}
-                                            placeholder="신페리오 우승자"
-                                            className="w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1e3a2b] focus:outline-none focus:border-[#b8860b]"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 기타 내용 */}
+                            {/* 전체 라운드 총평/메모 */}
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-[#1e3a2b]/50 block">기타 내용 (선택)</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-[#1e3a2b]/50 block">라운드 전체 기타 내용 (선택)</label>
                                 <textarea
-                                    value={awards.notes}
-                                    onChange={(e) => handleAwardChange('notes', e.target.value)}
-                                    placeholder="기타 메모 및 특이사항을 입력하세요 (예: 니어리스트, 롱기스트, 대회 후기 등)"
+                                    value={overallNotes}
+                                    onChange={(e) => setOverallNotes(e.target.value)}
+                                    placeholder="라운드 전체 메모 및 특이사항을 입력하세요"
                                     rows={2}
                                     className="w-full bg-black/5 border border-transparent rounded-2xl p-4 text-sm font-medium text-[#1e3a2b] focus:outline-none focus:border-[#2d5a27] resize-none"
                                 />
