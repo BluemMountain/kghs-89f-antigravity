@@ -221,17 +221,38 @@ export async function getRoundParticipants(roundId: number) {
     }
 }
 
-export async function finalizeRound(roundId: number, scores: { name: string, score: number }[]) {
+export async function finalizeRound(
+    roundId: number,
+    scores: { name: string, score: number }[],
+    awards?: { winner?: string, runnerUp?: string, newPerio?: string, notes?: string }
+) {
     try {
         const round = await sql`SELECT * FROM rounds WHERE id = ${roundId}`;
         if (round.length === 0) throw new Error('Round not found');
 
         const { title, round_date, location } = round[0];
 
+        // Ensure columns exist on past_rounds table
+        try {
+            await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS winner VARCHAR(100)`;
+            await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS runner_up VARCHAR(100)`;
+            await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS new_perio VARCHAR(100)`;
+            await sql`ALTER TABLE past_rounds ADD COLUMN IF NOT EXISTS notes TEXT`;
+        } catch (e) {
+            console.log('Columns may already exist:', e);
+        }
+
         // 1. Create past_round
         const [pastRound] = await sql`
-            INSERT INTO past_rounds (round_date, course_name)
-            VALUES (${new Date(round_date).toLocaleDateString('ko-KR')}, ${location || title})
+            INSERT INTO past_rounds (round_date, course_name, winner, runner_up, new_perio, notes)
+            VALUES (
+                ${new Date(round_date).toLocaleDateString('ko-KR')}, 
+                ${location || title},
+                ${awards?.winner || null},
+                ${awards?.runnerUp || null},
+                ${awards?.newPerio || null},
+                ${awards?.notes || null}
+            )
             RETURNING id
         `;
 
@@ -256,10 +277,11 @@ export async function finalizeRound(roundId: number, scores: { name: string, sco
             }
         }
 
-        // 3. Delete upcoming round
+        // 3. Delete upcoming round and its RSVPs
+        await sql`DELETE FROM rsvps WHERE round_id = ${roundId}`;
         await sql`DELETE FROM rounds WHERE id = ${roundId}`;
 
-        revalidatePath('/');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error: any) {
         console.error('Error finalizing round:', error);
