@@ -790,17 +790,22 @@ function RsvpManagementView() {
                 <div className="space-y-8">
                     {/* 조별 현황 요약 카드 */}
                     {sortedGroupKeys.length > 0 && (
-                        <div className="glass p-6 rounded-[2rem] bg-white/40 border border-black/5">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-sm font-black uppercase tracking-widest text-[#2d5a27]">
-                                    조편성 현황 (Group Summary)
-                                </h3>
-                                <span className="text-[10px] font-bold text-black/40">
-                                    💡 이름 선택 또는 드래그하여 조를 변경할 수 있습니다
+                        <div className="glass p-6 md:p-8 rounded-[2rem] bg-white/40 border border-black/5">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+                                <div>
+                                    <h3 className="text-base font-black uppercase tracking-widest text-[#2d5a27]">
+                                        조편성 현황 (Group Summary)
+                                    </h3>
+                                    <p className="text-xs text-black/40 mt-0.5">
+                                        💡 각 회원을 마우스로 드래그하거나 선택하여 조를 바꿀 수 있습니다.
+                                    </p>
+                                </div>
+                                <span className="text-xs font-bold text-[#2d5a27] bg-[#2d5a27]/10 px-3 py-1 rounded-full">
+                                    총 {attendees.length}명 참석 중
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
                                 {sortedGroupKeys.map(gKey => (
                                     <div
                                         key={gKey}
@@ -812,22 +817,22 @@ function RsvpManagementView() {
                                                 handleGroupChange(rId, gKey === '미지정' ? '' : gKey);
                                             }
                                         }}
-                                        className={`p-4 rounded-2xl border transition-all ${
+                                        className={`p-5 rounded-2xl border transition-all ${
                                             gKey === '미지정' 
-                                                ? 'bg-black/5 border-dashed border-black/10' 
-                                                : 'bg-white border-[#2d5a27]/20 shadow-sm hover:border-[#b8860b]'
+                                                ? 'bg-black/5 border-dashed border-black/15' 
+                                                : 'bg-white border-[#2d5a27]/20 shadow-md hover:border-[#b8860b]'
                                         }`}
                                     >
-                                        <div className="flex justify-between items-center mb-3 pb-2 border-b border-black/5">
-                                            <span className={`font-black text-sm ${gKey === '미지정' ? 'text-black/40' : 'text-[#2d5a27]'}`}>
+                                        <div className="flex justify-between items-center mb-3 pb-2.5 border-b border-black/5">
+                                            <span className={`font-black text-base ${gKey === '미지정' ? 'text-black/40' : 'text-[#2d5a27]'}`}>
                                                 {gKey}
                                             </span>
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/5 text-black/50">
+                                            <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-[#2d5a27]/10 text-[#2d5a27]">
                                                 {groupedMap[gKey].length}명
                                             </span>
                                         </div>
 
-                                        <div className="space-y-1.5 min-h-[40px]">
+                                        <div className="space-y-2 min-h-[50px]">
                                             {groupedMap[gKey].map((m: any) => (
                                                 <div
                                                     key={m.id}
@@ -835,18 +840,20 @@ function RsvpManagementView() {
                                                     onDragStart={(e) => {
                                                         e.dataTransfer.setData('text/plain', m.id.toString());
                                                     }}
-                                                    className="text-xs font-bold text-[#1e3a2b] flex justify-between items-center p-2 rounded-xl bg-black/5 hover:bg-[#2d5a27]/10 cursor-grab active:cursor-grabbing transition-all group/item border border-transparent hover:border-[#2d5a27]/20"
+                                                    className="text-sm font-bold text-[#1e3a2b] flex items-center justify-between p-2.5 rounded-xl bg-[#f8faf9] hover:bg-[#2d5a27]/10 cursor-grab active:cursor-grabbing transition-all group/item border border-black/5 hover:border-[#2d5a27]/30 gap-2 shadow-sm"
                                                 >
-                                                    <div className="flex items-center gap-1.5">
-                                                        <GripVertical size={12} className="text-black/30 group-hover/item:text-[#2d5a27]" />
-                                                        <span>{m.name}</span>
+                                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                        <GripVertical size={14} className="text-black/30 group-hover/item:text-[#2d5a27] shrink-0" />
+                                                        <span className="font-bold text-sm text-[#1e3a2b] whitespace-nowrap truncate">{m.name}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-[10px] text-black/40 font-medium">H: {m.member_handicap || '-'}</span>
+                                                    <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
+                                                        <span className="text-xs text-black/50 font-bold whitespace-nowrap bg-white px-2 py-0.5 rounded-md border border-black/5">
+                                                            H: {m.member_handicap || '-'}
+                                                        </span>
                                                         <select
                                                             value={m.group_name || ''}
                                                             onChange={(e) => handleGroupChange(m.id, e.target.value)}
-                                                            className="text-[10px] bg-white border border-black/10 rounded px-1 py-0.5 font-bold text-[#2d5a27] cursor-pointer focus:outline-none"
+                                                            className="text-xs bg-white border border-black/15 rounded-lg px-2 py-1 font-bold text-[#2d5a27] cursor-pointer focus:outline-none shadow-sm hover:border-[#2d5a27]"
                                                         >
                                                             <option value="">미지정</option>
                                                             <option value="1조">1조</option>
@@ -860,7 +867,7 @@ function RsvpManagementView() {
                                                 </div>
                                             ))}
                                             {groupedMap[gKey].length === 0 && (
-                                                <div className="text-[11px] text-black/20 text-center py-2 italic font-serif">비어 있음</div>
+                                                <div className="text-xs text-black/30 text-center py-3 italic font-serif">비어 있음 (이름을 끌어다 놓으세요)</div>
                                             )}
                                         </div>
                                     </div>
@@ -870,52 +877,54 @@ function RsvpManagementView() {
                     )}
 
                     {/* 참가자 RSVP 목록 및 조 지정 테이블 */}
-                    <div className="glass rounded-[2rem] bg-white/50 overflow-hidden shadow-xl border-black/5">
-                        <table className="w-full text-left">
-                            <thead className="bg-[#2d5a27] text-white text-[10px] font-black uppercase tracking-widest">
+                    <div className="glass rounded-[2rem] bg-white/60 overflow-x-auto shadow-xl border border-black/5">
+                        <table className="w-full text-left min-w-[800px]">
+                            <thead className="bg-[#2d5a27] text-white text-[11px] font-black uppercase tracking-widest">
                                 <tr>
-                                    <th className="px-6 py-5 w-12">#</th>
-                                    <th className="px-6 py-5">이름 및 스코어 정보</th>
-                                    <th className="px-6 py-5 text-center">상태</th>
-                                    <th className="px-6 py-5 text-center">조편성</th>
-                                    <th className="px-6 py-5 text-center">스폰서</th>
-                                    <th className="px-6 py-5 text-center">신청일시</th>
-                                    <th className="px-6 py-5 text-right">삭제</th>
+                                    <th className="px-6 py-5 w-12 text-center">#</th>
+                                    <th className="px-6 py-5 min-w-[340px]">이름 및 스코어 정보</th>
+                                    <th className="px-6 py-5 text-center min-w-[100px] whitespace-nowrap">상태</th>
+                                    <th className="px-6 py-5 text-center min-w-[110px] whitespace-nowrap">조편성</th>
+                                    <th className="px-6 py-5 text-center min-w-[120px]">스폰서</th>
+                                    <th className="px-6 py-5 text-center min-w-[150px] whitespace-nowrap">신청일시</th>
+                                    <th className="px-6 py-5 text-right w-16 whitespace-nowrap">삭제</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-black/5">
                                 {rsvps.map((rsvp, idx) => (
-                                    <tr key={rsvp.id} className="hover:bg-white/40 transition-colors group">
-                                        <td className="px-6 py-4 text-black/30 text-sm">{idx + 1}</td>
+                                    <tr key={rsvp.id} className="hover:bg-white/60 transition-colors group">
+                                        <td className="px-6 py-4 text-black/40 text-sm font-bold text-center">{idx + 1}</td>
                                         <td className="px-6 py-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                                <span className="font-bold text-black/80 text-lg">{rsvp.name}</span>
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <span className="font-black text-[#1e3a2b] text-lg whitespace-nowrap min-w-[3.5rem]">
+                                                    {rsvp.name}
+                                                </span>
                                                 {rsvp.name.length > 10 && (
-                                                    <span className="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">이름 확인 필요</span>
+                                                    <span className="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold whitespace-nowrap">이름 확인 필요</span>
                                                 )}
-                                                <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                                                    <span className="px-2.5 py-0.5 bg-[#2d5a27]/10 text-[#2d5a27] font-bold rounded-lg border border-[#2d5a27]/15">
+                                                <div className="flex flex-wrap items-center gap-2 text-xs">
+                                                    <span className="px-2.5 py-1 bg-[#2d5a27]/10 text-[#2d5a27] font-bold rounded-lg border border-[#2d5a27]/15 whitespace-nowrap">
                                                         25년 핸디: {rsvp.member_handicap || '-'}
                                                     </span>
-                                                    <span className="px-2.5 py-0.5 bg-[#b8860b]/10 text-[#b8860b] font-bold rounded-lg border border-[#b8860b]/15">
+                                                    <span className="px-2.5 py-1 bg-[#b8860b]/10 text-[#b8860b] font-bold rounded-lg border border-[#b8860b]/15 whitespace-nowrap">
                                                         이전 스코어: {rsvp.last_score ? `${rsvp.last_score}타` : '-'}
                                                     </span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
-                                                rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27]' : 'bg-black/5 text-black/30'
+                                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                                            <span className={`text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full whitespace-nowrap inline-block ${
+                                                rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27] border border-[#2d5a27]/20' : 'bg-black/5 text-black/30'
                                             }`}>
                                                 {rsvp.status === 'attend' ? '참석' : '불참'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-center">
+                                        <td className="px-6 py-4 text-center whitespace-nowrap">
                                             {rsvp.status === 'attend' ? (
                                                 <select
                                                     value={rsvp.group_name || ''}
                                                     onChange={(e) => handleGroupChange(rsvp.id, e.target.value)}
-                                                    className="bg-white border border-black/10 rounded-xl px-3 py-1.5 text-xs font-bold text-[#2d5a27] focus:outline-none focus:border-[#2d5a27]"
+                                                    className="bg-white border border-black/15 rounded-xl px-3 py-1.5 text-xs font-bold text-[#2d5a27] focus:outline-none focus:border-[#2d5a27] shadow-sm whitespace-nowrap"
                                                 >
                                                     <option value="">미지정</option>
                                                     <option value="1조">1조</option>
@@ -929,13 +938,13 @@ function RsvpManagementView() {
                                                 <span className="text-xs text-black/20 font-medium">-</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-center text-sm text-black/50">
+                                        <td className="px-6 py-4 text-center text-sm font-medium text-black/60">
                                             {rsvp.sponsor_item || '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-center text-sm text-black/40">
+                                        <td className="px-6 py-4 text-center text-xs font-medium text-black/40 whitespace-nowrap">
                                             {new Date(rsvp.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right whitespace-nowrap">
                                             <button
                                                 onClick={() => handleDelete(rsvp.id, rsvp.name)}
                                                 disabled={deleting === rsvp.id}
