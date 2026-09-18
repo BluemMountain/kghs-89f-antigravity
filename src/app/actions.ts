@@ -276,3 +276,13 @@ export async function deleteRound(id: number) {
         return { success: false, error: error.message };
     }
 }
+
+export async function deleteRsvp(id: number) {
+    try {
+        await sql`DELETE FROM rsvps WHERE id = ${id}`;
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}

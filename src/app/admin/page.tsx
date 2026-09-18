@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound, getRoundParticipants, finalizeRound } from '@/app/actions';
+import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound, getRoundParticipants, finalizeRound, deleteRsvp, getRsvps, getUpcomingRound } from '@/app/actions';
 import ScoreHistoryTable from '@/components/ScoreHistoryTable';
 import {
     LayoutDashboard,
@@ -17,14 +17,15 @@ import {
     ShieldCheck,
     User,
     Lock,
-    Trophy
+    Trophy,
+    ClipboardList
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminPage() {
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [password, setPassword] = useState('');
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'rounds' | 'history'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'rounds' | 'history' | 'rsvps'>('dashboard');
     const [members, setMembers] = useState<any[]>([]);
     const [rounds, setRounds] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -129,6 +130,12 @@ export default function AdminPage() {
                             label="Rounds"
                         />
                         <TabButton
+                            active={activeTab === 'rsvps'}
+                            onClick={() => setActiveTab('rsvps')}
+                            icon={<ClipboardList size={20} />}
+                            label="RSVP 관리"
+                        />
+                        <TabButton
                             active={activeTab === 'history'}
                             onClick={() => setActiveTab('history')}
                             icon={<Trophy size={20} />}
@@ -158,6 +165,7 @@ export default function AdminPage() {
                                 {activeTab === 'dashboard' && <DashboardView members={members} rounds={rounds} setActiveTab={setActiveTab} />}
                                 {activeTab === 'members' && <MemberManagementView members={members} refresh={refreshData} />}
                                 {activeTab === 'rounds' && <RoundManagementView rounds={rounds} refresh={refreshData} />}
+                                {activeTab === 'rsvps' && <RsvpManagementView />}
                                 {activeTab === 'history' && (
                                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                                         <ScoreHistoryTable />
@@ -597,5 +605,126 @@ function ScoreEntryModal({ round, onClose, refresh }: any) {
                 )}
             </motion.div>
         </div>
+    );
+}
+
+function RsvpManagementView() {
+    const [round, setRound] = useState<any>(null);
+    const [rsvps, setRsvps] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState<number | null>(null);
+
+    const fetchRsvps = async () => {
+        setLoading(true);
+        const upcoming = await getUpcomingRound();
+        if (upcoming) {
+            setRound(upcoming);
+            const list = await getRsvps(upcoming.id);
+            setRsvps(list);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchRsvps();
+    }, []);
+
+    const handleDelete = async (id: number, name: string) => {
+        if (!confirm(`"${name}" 님의 RSVP 신청을 삭제하시겠습니까?`)) return;
+        setDeleting(id);
+        const res = await deleteRsvp(id);
+        if (res.success) {
+            await fetchRsvps();
+        } else {
+            alert('삭제 실패: ' + res.error);
+        }
+        setDeleting(null);
+    };
+
+    if (loading) return <div className="animate-pulse glass h-[400px] rounded-[2rem]"></div>;
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-4xl font-bold italic text-[#1e3a2b] font-serif">RSVP 관리</h1>
+                    {round && (
+                        <p className="text-black/40 text-sm mt-2">
+                            {round.title} · {new Date(round.round_date).toLocaleDateString('ko-KR')} · 총 {rsvps.length}명 신청
+                        </p>
+                    )}
+                </div>
+                <button
+                    onClick={fetchRsvps}
+                    className="bg-[#2d5a27] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#b8860b] transition-all shadow-lg shadow-[#2d5a27]/10"
+                >
+                    새로고침
+                </button>
+            </div>
+
+            {!round ? (
+                <div className="glass p-16 rounded-[2rem] bg-white/40 text-center">
+                    <p className="text-black/40 italic font-serif text-lg">현재 예정된 라운드가 없습니다.</p>
+                </div>
+            ) : rsvps.length === 0 ? (
+                <div className="glass p-16 rounded-[2rem] bg-white/40 text-center">
+                    <p className="text-black/40 italic font-serif text-lg">아직 신청자가 없습니다.</p>
+                </div>
+            ) : (
+                <div className="glass rounded-[2rem] bg-white/50 overflow-hidden shadow-xl border-black/5">
+                    <table className="w-full text-left">
+                        <thead className="bg-[#2d5a27] text-white text-[10px] font-black uppercase tracking-widest">
+                            <tr>
+                                <th className="px-6 py-5 w-12">#</th>
+                                <th className="px-6 py-5">이름</th>
+                                <th className="px-6 py-5 text-center">상태</th>
+                                <th className="px-6 py-5 text-center">스폰서</th>
+                                <th className="px-6 py-5 text-center">신청일시</th>
+                                <th className="px-6 py-5 text-right">삭제</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-black/5">
+                            {rsvps.map((rsvp, idx) => (
+                                <tr key={rsvp.id} className="hover:bg-white/40 transition-colors group">
+                                    <td className="px-6 py-4 text-black/30 text-sm">{idx + 1}</td>
+                                    <td className="px-6 py-4">
+                                        <span className="font-bold text-black/80 text-lg">{rsvp.name}</span>
+                                        {rsvp.name.length > 10 && (
+                                            <span className="ml-2 text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">이름 확인 필요</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+                                            rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27]' : 'bg-black/5 text-black/30'
+                                        }`}>
+                                            {rsvp.status === 'attend' ? '참석' : '불참'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center text-sm text-black/50">
+                                        {rsvp.sponsor_item || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 text-center text-sm text-black/40">
+                                        {new Date(rsvp.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={() => handleDelete(rsvp.id, rsvp.name)}
+                                            disabled={deleting === rsvp.id}
+                                            className="p-2 hover:bg-red-50 rounded-lg text-black/20 hover:text-red-500 transition-all disabled:opacity-30"
+                                        >
+                                            {deleting === rsvp.id ? (
+                                                <span className="text-xs">삭제중...</span>
+                                            ) : (
+                                                <Trash2 size={18} />
+                                            )}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </motion.div>
     );
 }
