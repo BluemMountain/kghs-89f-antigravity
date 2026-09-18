@@ -42,6 +42,16 @@ export default function RsvpStatus() {
     if (!round) return null;
 
     const attendeeCount = rsvps.filter(r => r.status === 'attend').length;
+    const attendees = rsvps.filter(r => r.status === 'attend');
+    const groupedRsvps: { [key: string]: any[] } = {};
+    attendees.forEach(r => {
+        if (r.group_name) {
+            if (!groupedRsvps[r.group_name]) groupedRsvps[r.group_name] = [];
+            groupedRsvps[r.group_name].push(r);
+        }
+    });
+
+    const groupedKeys = Object.keys(groupedRsvps).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
     return (
         <section id="rsvp" className="py-24 px-6 max-w-7xl mx-auto">
@@ -83,6 +93,45 @@ export default function RsvpStatus() {
                 </div>
             </div>
 
+            {/* 확정 조편성표 (Group List) */}
+            {groupedKeys.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="mb-16 bg-gradient-to-br from-[#1e3a2b] to-[#2d5a27] rounded-[2.5rem] p-8 md:p-10 text-white shadow-2xl relative overflow-hidden"
+                >
+                    <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                        <div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#b8860b]">Confirmed Pairings</span>
+                            <h3 className="text-2xl md:text-3xl font-bold font-serif italic text-white mt-1">라운딩 확정 조편성표</h3>
+                        </div>
+                        <span className="text-xs font-bold text-white/70 bg-white/10 px-4 py-2 rounded-full border border-white/10">
+                            총 {groupedKeys.length}개 조
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {groupedKeys.map(gKey => (
+                            <div key={gKey} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                                <div className="text-sm font-black text-[#b8860b] mb-3 border-b border-white/10 pb-2 flex justify-between items-center">
+                                    <span>{gKey}</span>
+                                    <span className="text-[10px] text-white/50">{groupedRsvps[gKey].length}명</span>
+                                </div>
+                                <div className="space-y-2">
+                                    {groupedRsvps[gKey].map((member: any) => (
+                                        <div key={member.id} className="flex justify-between items-center text-sm font-bold">
+                                            <span>{member.name}</span>
+                                            <span className="text-[11px] font-medium text-white/50">H: {member.member_handicap || '-'}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {rsvps.map((rsvp, idx) => (
                     <motion.div
@@ -94,7 +143,14 @@ export default function RsvpStatus() {
                         className="bg-white rounded-[2rem] p-8 shadow-sm border border-[#1e3a2b]/5 flex flex-col gap-6 relative overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
                     >
                         <div className="flex justify-between items-center">
-                            <div className="font-black text-2xl text-[#1e3a2b]">{rsvp.name}</div>
+                            <div className="font-black text-2xl text-[#1e3a2b] flex items-center gap-2">
+                                {rsvp.name}
+                                {rsvp.group_name && (
+                                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#2d5a27]/10 text-[#2d5a27] font-bold">
+                                        {rsvp.group_name}
+                                    </span>
+                                )}
+                            </div>
                             <div className={`text-[11px] font-black uppercase tracking-widest ${rsvp.status === 'attend' ? 'text-[#2d5a27]' : 'text-black/30'}`}>
                                 {rsvp.status === 'attend' ? '참석확정' : '불참'}
                             </div>

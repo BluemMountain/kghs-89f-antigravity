@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound, getRoundParticipants, finalizeRound, deleteRsvp, getRsvps, getUpcomingRound } from '@/app/actions';
+import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound, getRoundParticipants, finalizeRound, deleteRsvp, getRsvps, getUpcomingRound, updateRsvpGroup, autoAssignGroups } from '@/app/actions';
 import ScoreHistoryTable from '@/components/ScoreHistoryTable';
 import {
     LayoutDashboard,
@@ -679,6 +679,7 @@ function RsvpManagementView() {
     const [rsvps, setRsvps] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState<number | null>(null);
+    const [autoAssigning, setAutoAssigning] = useState(false);
 
     const fetchRsvps = async () => {
         setLoading(true);
@@ -707,25 +708,73 @@ function RsvpManagementView() {
         setDeleting(null);
     };
 
+    const handleGroupChange = async (rsvpId: number, groupName: string) => {
+        const res = await updateRsvpGroup(rsvpId, groupName);
+        if (res.success) {
+            setRsvps(prev => prev.map(r => r.id === rsvpId ? { ...r, group_name: groupName } : r));
+        } else {
+            alert('조 변경 실패: ' + res.error);
+        }
+    };
+
+    const handleAutoAssign = async () => {
+        if (!round) return;
+        if (!confirm('참석 확정 인원을 핸디캡 균형에 따라 자동 4인 1조로 배치하시겠습니까?')) return;
+        setAutoAssigning(true);
+        const res = await autoAssignGroups(round.id);
+        if (res.success) {
+            await fetchRsvps();
+        } else {
+            alert('자동 조편성 실패: ' + res.error);
+        }
+        setAutoAssigning(false);
+    };
+
     if (loading) return <div className="animate-pulse glass h-[400px] rounded-[2rem]"></div>;
+
+    // Grouping summary
+    const attendees = rsvps.filter(r => r.status === 'attend');
+    const groupedMap: { [key: string]: any[] } = {};
+    attendees.forEach(r => {
+        const gName = r.group_name || '미지정';
+        if (!groupedMap[gName]) groupedMap[gName] = [];
+        groupedMap[gName].push(r);
+    });
+
+    const sortedGroupKeys = Object.keys(groupedMap).sort((a, b) => {
+        if (a === '미지정') return 1;
+        if (b === '미지정') return -1;
+        return a.localeCompare(b, undefined, { numeric: true });
+    });
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold italic text-[#1e3a2b] font-serif">RSVP 관리</h1>
+                    <h1 className="text-4xl font-bold italic text-[#1e3a2b] font-serif">RSVP & 조편성 관리</h1>
                     {round && (
                         <p className="text-black/40 text-sm mt-2">
-                            {round.title} · {new Date(round.round_date).toLocaleDateString('ko-KR')} · 총 {rsvps.length}명 신청
+                            {round.title} · {new Date(round.round_date).toLocaleDateString('ko-KR')} · 총 {rsvps.length}명 신청 (참석 {attendees.length}명)
                         </p>
                     )}
                 </div>
-                <button
-                    onClick={fetchRsvps}
-                    className="bg-[#2d5a27] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#b8860b] transition-all shadow-lg shadow-[#2d5a27]/10"
-                >
-                    새로고침
-                </button>
+                <div className="flex flex-wrap items-center gap-3">
+                    {round && attendees.length > 0 && (
+                        <button
+                            onClick={handleAutoAssign}
+                            disabled={autoAssigning}
+                            className="bg-[#b8860b] text-white px-5 py-3 rounded-xl font-bold hover:bg-[#2d5a27] transition-all shadow-lg shadow-[#b8860b]/10 text-xs uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
+                        >
+                            ⚡ 자동 4인 조편성
+                        </button>
+                    )}
+                    <button
+                        onClick={fetchRsvps}
+                        className="bg-[#2d5a27] text-white px-5 py-3 rounded-xl font-bold hover:bg-[#b8860b] transition-all shadow-lg shadow-[#2d5a27]/10 text-xs uppercase tracking-widest"
+                    >
+                        새로고침
+                    </button>
+                </div>
             </div>
 
             {!round ? (
@@ -737,58 +786,112 @@ function RsvpManagementView() {
                     <p className="text-black/40 italic font-serif text-lg">아직 신청자가 없습니다.</p>
                 </div>
             ) : (
-                <div className="glass rounded-[2rem] bg-white/50 overflow-hidden shadow-xl border-black/5">
-                    <table className="w-full text-left">
-                        <thead className="bg-[#2d5a27] text-white text-[10px] font-black uppercase tracking-widest">
-                            <tr>
-                                <th className="px-6 py-5 w-12">#</th>
-                                <th className="px-6 py-5">이름</th>
-                                <th className="px-6 py-5 text-center">상태</th>
-                                <th className="px-6 py-5 text-center">스폰서</th>
-                                <th className="px-6 py-5 text-center">신청일시</th>
-                                <th className="px-6 py-5 text-right">삭제</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-black/5">
-                            {rsvps.map((rsvp, idx) => (
-                                <tr key={rsvp.id} className="hover:bg-white/40 transition-colors group">
-                                    <td className="px-6 py-4 text-black/30 text-sm">{idx + 1}</td>
-                                    <td className="px-6 py-4">
-                                        <span className="font-bold text-black/80 text-lg">{rsvp.name}</span>
-                                        {rsvp.name.length > 10 && (
-                                            <span className="ml-2 text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">이름 확인 필요</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
-                                            rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27]' : 'bg-black/5 text-black/30'
-                                        }`}>
-                                            {rsvp.status === 'attend' ? '참석' : '불참'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-center text-sm text-black/50">
-                                        {rsvp.sponsor_item || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 text-center text-sm text-black/40">
-                                        {new Date(rsvp.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => handleDelete(rsvp.id, rsvp.name)}
-                                            disabled={deleting === rsvp.id}
-                                            className="p-2 hover:bg-red-50 rounded-lg text-black/20 hover:text-red-500 transition-all disabled:opacity-30"
-                                        >
-                                            {deleting === rsvp.id ? (
-                                                <span className="text-xs">삭제중...</span>
-                                            ) : (
-                                                <Trash2 size={18} />
-                                            )}
-                                        </button>
-                                    </td>
+                <div className="space-y-8">
+                    {/* 조별 현황 요약 카드 */}
+                    {sortedGroupKeys.length > 0 && (
+                        <div className="glass p-6 rounded-[2rem] bg-white/40 border border-black/5">
+                            <h3 className="text-sm font-black uppercase tracking-widest text-[#2d5a27] mb-4">
+                                조편성 현황 (Group Summary)
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {sortedGroupKeys.map(gKey => (
+                                    <div key={gKey} className={`p-4 rounded-2xl border ${gKey === '미지정' ? 'bg-black/5 border-dashed border-black/10' : 'bg-white border-[#2d5a27]/20 shadow-sm'}`}>
+                                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-black/5">
+                                            <span className={`font-black text-sm ${gKey === '미지정' ? 'text-black/40' : 'text-[#2d5a27]'}`}>
+                                                {gKey}
+                                            </span>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/5 text-black/50">
+                                                {groupedMap[gKey].length}명
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1">
+                                            {groupedMap[gKey].map((m: any) => (
+                                                <div key={m.id} className="text-xs font-bold text-[#1e3a2b] flex justify-between items-center">
+                                                    <span>{m.name}</span>
+                                                    <span className="text-[10px] text-black/30 font-medium">H: {m.member_handicap || '-'}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 참가자 RSVP 목록 및 조 지정 테이블 */}
+                    <div className="glass rounded-[2rem] bg-white/50 overflow-hidden shadow-xl border-black/5">
+                        <table className="w-full text-left">
+                            <thead className="bg-[#2d5a27] text-white text-[10px] font-black uppercase tracking-widest">
+                                <tr>
+                                    <th className="px-6 py-5 w-12">#</th>
+                                    <th className="px-6 py-5">이름</th>
+                                    <th className="px-6 py-5 text-center">상태</th>
+                                    <th className="px-6 py-5 text-center">조편성</th>
+                                    <th className="px-6 py-5 text-center">스폰서</th>
+                                    <th className="px-6 py-5 text-center">신청일시</th>
+                                    <th className="px-6 py-5 text-right">삭제</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-black/5">
+                                {rsvps.map((rsvp, idx) => (
+                                    <tr key={rsvp.id} className="hover:bg-white/40 transition-colors group">
+                                        <td className="px-6 py-4 text-black/30 text-sm">{idx + 1}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="font-bold text-black/80 text-lg">{rsvp.name}</span>
+                                            {rsvp.name.length > 10 && (
+                                                <span className="ml-2 text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">이름 확인 필요</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+                                                rsvp.status === 'attend' ? 'bg-[#2d5a27]/10 text-[#2d5a27]' : 'bg-black/5 text-black/30'
+                                            }`}>
+                                                {rsvp.status === 'attend' ? '참석' : '불참'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            {rsvp.status === 'attend' ? (
+                                                <select
+                                                    value={rsvp.group_name || ''}
+                                                    onChange={(e) => handleGroupChange(rsvp.id, e.target.value)}
+                                                    className="bg-white border border-black/10 rounded-xl px-3 py-1.5 text-xs font-bold text-[#2d5a27] focus:outline-none focus:border-[#2d5a27]"
+                                                >
+                                                    <option value="">미지정</option>
+                                                    <option value="1조">1조</option>
+                                                    <option value="2조">2조</option>
+                                                    <option value="3조">3조</option>
+                                                    <option value="4조">4조</option>
+                                                    <option value="5조">5조</option>
+                                                    <option value="6조">6조</option>
+                                                </select>
+                                            ) : (
+                                                <span className="text-xs text-black/20 font-medium">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-center text-sm text-black/50">
+                                            {rsvp.sponsor_item || '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-center text-sm text-black/40">
+                                            {new Date(rsvp.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button
+                                                onClick={() => handleDelete(rsvp.id, rsvp.name)}
+                                                disabled={deleting === rsvp.id}
+                                                className="p-2 hover:bg-red-50 rounded-lg text-black/20 hover:text-red-500 transition-all disabled:opacity-30"
+                                            >
+                                                {deleting === rsvp.id ? (
+                                                    <span className="text-xs">삭제중...</span>
+                                                ) : (
+                                                    <Trash2 size={18} />
+                                                )}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </motion.div>

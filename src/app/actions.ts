@@ -317,3 +317,131 @@ export async function deleteRsvp(id: number) {
         return { success: false, error: error.message };
     }
 }
+
+// --- Gallery Actions ---
+
+export async function getGalleryImages() {
+    try {
+        await sql`
+            CREATE TABLE IF NOT EXISTS gallery (
+                id SERIAL PRIMARY KEY,
+                public_id VARCHAR(100),
+                url TEXT NOT NULL,
+                description TEXT,
+                uploaded_by VARCHAR(50),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+
+        const images = await sql`
+            SELECT * FROM gallery 
+            ORDER BY created_at DESC
+        `;
+        return images;
+    } catch (error) {
+        console.error('Error fetching gallery images:', error);
+        return [];
+    }
+}
+
+export async function uploadGalleryImage(formData: FormData) {
+    try {
+        await sql`
+            CREATE TABLE IF NOT EXISTS gallery (
+                id SERIAL PRIMARY KEY,
+                public_id VARCHAR(100),
+                url TEXT NOT NULL,
+                description TEXT,
+                uploaded_by VARCHAR(50),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+
+        const url = formData.get('url') as string;
+        const description = formData.get('description') as string || '';
+        const uploadedBy = formData.get('uploadedBy') as string || '동문';
+
+        if (!url) {
+            return { success: false, error: '이미지 URL이 유효하지 않습니다.' };
+        }
+
+        await sql`
+            INSERT INTO gallery (url, description, uploaded_by)
+            VALUES (${url}, ${description}, ${uploadedBy})
+        `;
+
+        revalidatePath('/gallery');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error uploading gallery image:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deleteGalleryImage(id: number) {
+    try {
+        await sql`DELETE FROM gallery WHERE id = ${id}`;
+        revalidatePath('/gallery');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// --- Group Assignment (조편성) Actions ---
+
+export async function updateRsvpGroup(rsvpId: number, groupName: string) {
+    try {
+        await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS group_name VARCHAR(50);`;
+        await sql`
+            UPDATE rsvps 
+            SET group_name = ${groupName}
+            WHERE id = ${rsvpId}
+        `;
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error updating RSVP group:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function autoAssignGroups(roundId: number) {
+    try {
+        await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS group_name VARCHAR(50);`;
+        
+        // Get attending participants
+        const rsvps = await sql`
+            SELECT r.id, r.name, m.handicap
+            FROM rsvps r
+            LEFT JOIN members m ON r.name = m.name
+            WHERE r.round_id = ${roundId} AND r.status = 'attend'
+            ORDER BY COALESCE(m.handicap, 99) ASC, r.name ASC
+        `;
+
+        if (rsvps.length === 0) {
+            return { success: false, error: '참석 확정자가 없습니다.' };
+        }
+
+        // Snake / Balanced Grouping (4 members per group)
+        // Group names: 1조, 2조, 3조, 4조, etc.
+        const numGroups = Math.ceil(rsvps.length / 4);
+        for (let i = 0; i < rsvps.length; i++) {
+            const groupNum = (i % numGroups) + 1;
+            const groupName = `${groupNum}조`;
+            await sql`
+                UPDATE rsvps
+                SET group_name = ${groupName}
+                WHERE id = ${rsvps[i].id}
+            `;
+        }
+
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error auto-assigning groups:', error);
+        return { success: false, error: error.message };
+    }
+}
+
