@@ -198,16 +198,16 @@ export default function Home() {
                                 <span className="px-2.5 py-1 bg-white text-black font-black rounded-lg border border-black/10 shrink-0 text-center w-max shadow-sm">
                                     ⚪ 백팀 (6명)
                                 </span>
-                                <span className="font-bold text-[#1e3a2b] leading-relaxed">
-                                    한승훈, 김기홍, 김천중, 황승용, 조명환, 김재우
+                                <span className="font-bold text-[#1e3a2b] leading-relaxed break-keep">
+                                    한승훈, 김기홍, 김천중<br />황승용, 조명환, 김재우
                                 </span>
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 pt-2 border-t border-black/5">
                                 <span className="px-2.5 py-1 bg-[#1e3a2b] text-white font-black rounded-lg shrink-0 text-center w-max shadow-sm">
                                     ⚫ 흑팀 (6명)
                                 </span>
-                                <span className="font-bold text-[#1e3a2b] leading-relaxed">
-                                    박청산, 안수용, 김동익, 마석용, 김준규, 박경배
+                                <span className="font-bold text-[#1e3a2b] leading-relaxed break-keep">
+                                    박청산, 안수용, 김동익<br />마석용, 김준규, 박경배
                                 </span>
                             </div>
                         </div>
