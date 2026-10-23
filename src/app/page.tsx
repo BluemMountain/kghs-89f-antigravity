@@ -199,7 +199,7 @@ export default function Home() {
                                     ⚪ 백팀 (6명)
                                 </span>
                                 <span className="font-bold text-[#1e3a2b] leading-relaxed">
-                                    한승훈, 강정석, 김천중, 황승용, 조명환, 김재우
+                                    한승훈, 김기홍, 김천중, 황승용, 조명환, 김재우
                                 </span>
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 pt-2 border-t border-black/5">

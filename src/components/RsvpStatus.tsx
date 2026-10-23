@@ -117,7 +117,7 @@ export default function RsvpStatus() {
                             <span className="text-xs font-bold bg-white text-black px-3 py-1 rounded-full border border-black/10">6명</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {['한승훈', '강정석', '김천중', '황승용', '조명환', '김재우'].map(name => (
+                            {['한승훈', '김기홍', '김천중', '황승용', '조명환', '김재우'].map(name => (
                                 <span key={name} className="px-3 py-1 bg-white rounded-xl text-xs font-bold text-[#1e3a2b] border border-black/5 shadow-xs">
                                     {name}
                                 </span>
