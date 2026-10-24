@@ -52,6 +52,11 @@ export default function RsvpStatus() {
     });
 
     const groupedKeys = Object.keys(groupedRsvps).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    const groupTeeTimes: { [key: string]: string } = {
+        '1조': '12:23',
+        '2조': '12:30',
+        '3조': '12:37',
+    };
 
     return (
         <section id="rsvp" className="py-24 px-6 max-w-7xl mx-auto">
@@ -156,7 +161,12 @@ export default function RsvpStatus() {
                     <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
                         <div>
                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#b8860b]">Confirmed Pairings</span>
-                            <h3 className="text-2xl md:text-3xl font-bold font-serif italic text-white mt-1">라운딩 확정 조편성표</h3>
+                            <div className="flex flex-wrap items-center gap-3 mt-1">
+                                <h3 className="text-2xl md:text-3xl font-bold font-serif italic text-white">라운딩 확정 조편성표</h3>
+                                <span className="text-sm md:text-base font-bold text-[#d4af37] bg-white/10 px-3.5 py-1 rounded-full border border-[#d4af37]/30">
+                                    라싸CC 레이크-밸리 코스
+                                </span>
+                            </div>
                         </div>
                         <span className="text-xs font-bold text-white/70 bg-white/10 px-4 py-2 rounded-full border border-white/10">
                             총 {groupedKeys.length}개 조
@@ -167,7 +177,14 @@ export default function RsvpStatus() {
                         {groupedKeys.map(gKey => (
                             <div key={gKey} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10">
                                 <div className="text-sm font-black text-[#b8860b] mb-3 border-b border-white/10 pb-2 flex justify-between items-center">
-                                    <span>{gKey}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span>{gKey}</span>
+                                        {groupTeeTimes[gKey] && (
+                                            <span className="text-xs font-bold text-white/90 bg-white/15 px-2 py-0.5 rounded-md">
+                                                {groupTeeTimes[gKey]}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="text-[10px] text-white/50">{groupedRsvps[gKey].length}명</span>
                                 </div>
                                 <div className="space-y-2">
