@@ -494,6 +494,10 @@ function RoundManagementView({ rounds, refresh }: any) {
                                     <input name="roundDate" type="date" required className="w-full bg-black/5 px-5 py-3 rounded-xl focus:outline-none focus:border-[#2d5a27] border border-transparent transition-all" />
                                 </div>
                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Course (코스명)</label>
+                                    <input name="location" defaultValue="라싸CC 레이크-밸리 코스" placeholder="예: 라싸CC 레이크-밸리 코스" className="w-full bg-black/5 px-5 py-3 rounded-xl focus:outline-none focus:border-[#2d5a27] border border-transparent transition-all" />
+                                </div>
+                                <div className="space-y-1">
                                     <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Status</label>
                                     <select name="status" className="w-full bg-black/5 px-5 py-3 rounded-xl focus:outline-none focus:border-[#2d5a27] border border-transparent transition-all">
                                         <option value="upcoming">Upcoming (Active RSVP)</option>
@@ -518,6 +522,7 @@ function ScoreEntryView({ round, refresh, onDelete }: any) {
     const [awardsMap, setAwardsMap] = useState<{ [key: string]: string }>({});
     const [notesMap, setNotesMap] = useState<{ [key: string]: string }>({});
     const [overallNotes, setOverallNotes] = useState('');
+    const [courseName, setCourseName] = useState(round?.location || '라싸CC 레이크-밸리 코스');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -532,6 +537,7 @@ function ScoreEntryView({ round, refresh, onDelete }: any) {
         }
         if (round?.id) {
             fetchParticipants();
+            setCourseName(round?.location || '라싸CC 레이크-밸리 코스');
         }
     }, [round?.id]);
 
@@ -567,7 +573,7 @@ function ScoreEntryView({ round, refresh, onDelete }: any) {
             if (!confirm('점수가 0인 인원이 있습니다. 그대로 진행하시겠습니까?')) return;
         }
 
-        const res = await finalizeRound(round.id, participantData, overallNotes);
+        const res = await finalizeRound(round.id, participantData, overallNotes, courseName);
         if (res.success) {
             alert('라운드 성적이 정상적으로 반영 및 확정되었습니다.');
             refresh();
@@ -633,6 +639,18 @@ function ScoreEntryView({ round, refresh, onDelete }: any) {
                     )}
 
                     <div>
+                        <div className="mb-6 bg-[#f8faf9] p-4 rounded-2xl border border-black/5 flex flex-col sm:flex-row sm:items-center gap-3">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-[#2d5a27] shrink-0">
+                                구장 및 코스명 (History 기록용)
+                            </label>
+                            <input
+                                type="text"
+                                value={courseName}
+                                onChange={(e) => setCourseName(e.target.value)}
+                                placeholder="예: 라싸CC 레이크-밸리 코스"
+                                className="flex-1 bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1e3a2b] focus:outline-none focus:border-[#2d5a27] shadow-sm"
+                            />
+                        </div>
                         <label className="text-[11px] font-black uppercase tracking-widest text-[#2d5a27] mb-3 block">
                             참석자 스코어, 핸디캡, 수상 및 비고 입력
                         </label>

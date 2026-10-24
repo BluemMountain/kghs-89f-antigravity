@@ -186,6 +186,7 @@ export async function addRound(formData: FormData) {
     const title = formData.get('title') as string;
     const date = formData.get('roundDate') as string;
     const status = formData.get('status') as string || 'upcoming';
+    const location = formData.get('location') as string || '라싸CC';
 
     try {
         // Check for duplicates
@@ -198,8 +199,8 @@ export async function addRound(formData: FormData) {
         }
 
         await sql`
-            INSERT INTO rounds (title, round_date, status)
-            VALUES (${title}, ${date}, ${status})
+            INSERT INTO rounds (title, round_date, location, status)
+            VALUES (${title}, ${date}, ${location}, ${status})
         `;
         revalidatePath('/');
         return { success: true };
@@ -241,7 +242,8 @@ export async function getRoundParticipants(roundId: number) {
 export async function finalizeRound(
     roundId: number,
     participantData: { name: string, score: number, award?: string, note?: string }[],
-    overallNotes?: string
+    overallNotes?: string,
+    courseName?: string
 ) {
     try {
         const round = await sql`SELECT * FROM rounds WHERE id = ${roundId}`;
@@ -274,8 +276,8 @@ export async function finalizeRound(
         const [pastRound] = await sql`
             INSERT INTO past_rounds (round_date, course_name, winner, runner_up, new_perio, notes)
             VALUES (
-                ${new Date(round_date).toLocaleDateString('ko-KR')}, 
-                ${location || title},
+                ${(() => { const d = new Date(new Date(round_date).getTime() + 9 * 3600000); return String(d.getUTCFullYear()).slice(-2) + String(d.getUTCMonth() + 1).padStart(2, '0') + String(d.getUTCDate()).padStart(2, '0'); })()}, 
+                ${courseName?.trim() || location || title},
                 ${winnerName},
                 ${runnerUpName},
                 ${newPerioName},
