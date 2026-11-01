@@ -6,13 +6,18 @@ import { ShieldCheck, User, Gift } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const SPONSORS = [
-    { no: 1, name: '황승용', item: '파크선샤인 2박3일 숙박권, 일본술 1병' },
+    { no: 1, name: '황승용', item: '파크선샤인 2박3일 숙박권 + 히비끼 1병' },
     { no: 2, name: '김동익', item: 'JBL Flip7 블루투스 스피커' },
     { no: 3, name: '박청산', item: '고~오~급 타올 1 set' },
     { no: 4, name: '김준규', item: '엘지생건 비욘드 바디셋트' },
     { no: 5, name: '마석용', item: '사케 1병' },
-    { no: 6, name: '김재우', item: '슈퍼사이클론 차량용 청소기' },
+    { no: 6, name: '김재우', item: '슈퍼싸이클론 차량용 청소기 + 드라이버 Ultra Super Rocket Tee 1 ea' },
     { no: 7, name: '김천중', item: '보르도 와인 1병 + 중국 된장술 1병' },
+    { no: 8, name: '조명환', item: '화이트 와인 1병 + 양파즙 1박스' },
+    { no: 9, name: '한승훈', item: 'Kamill 바디로션 세트 + BACHA coffee' },
+    { no: 10, name: '박경배', item: '테일러메이드 골프공(2피스), 젠플리츠 혼밥용기세트' },
+    { no: 11, name: '김기홍', item: '정관장 활기력 MAX, 힐링 티세트' },
+    { no: 12, name: '안수용', item: '사케 1병' },
 ];
 
 export default function MemberList() {
