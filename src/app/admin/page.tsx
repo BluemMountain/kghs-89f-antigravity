@@ -962,9 +962,12 @@ function RsvpManagementView({ members = [] }: { members?: any[] }) {
                                                         <GripVertical size={14} className="text-black/30 group-hover/item:text-[#2d5a27] shrink-0" />
                                                         <span className="font-bold text-sm text-[#1e3a2b] whitespace-nowrap truncate">{m.name}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
+                                                    <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                                                         <span className="text-xs text-black/50 font-bold whitespace-nowrap bg-white px-2 py-0.5 rounded-md border border-black/5">
                                                             H: {m.member_handicap || '-'}
+                                                        </span>
+                                                        <span className="text-xs text-[#b8860b] font-bold whitespace-nowrap bg-[#b8860b]/10 px-2 py-0.5 rounded-md border border-[#b8860b]/15">
+                                                            이전: {m.last_score || '-'}
                                                         </span>
                                                         <select
                                                             value={m.group_name || ''}
