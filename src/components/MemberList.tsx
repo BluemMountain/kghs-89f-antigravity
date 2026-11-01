@@ -52,7 +52,7 @@ export default function MemberList() {
                         </span>
                         <h3 className="text-3xl md:text-4xl font-bold font-serif italic text-[#1e3a2b] mt-3 flex items-center justify-center gap-3">
                             <Gift className="text-[#b8860b]" size={28} />
-                            납회식 스폰서 및 스폰 물품
+                            26년 10월 납회식 스폰서 및 스폰 물품
                         </h3>
                         <p className="text-sm text-[#1e3a2b]/60 mt-2">
                             이번 라운딩을 더욱 풍성하게 만들어 주신 동문 여러분의 소중한 협찬 내역입니다.
