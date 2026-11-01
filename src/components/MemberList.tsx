@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getMembers } from '@/app/actions';
-import { ShieldCheck, User, Gift } from 'lucide-react';
+import { ShieldCheck, Gift } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const SPONSORS = [
@@ -44,7 +44,7 @@ export default function MemberList() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mb-32 bg-[#f8faf9] rounded-[2.5rem] p-8 md:p-12 border border-[#1e3a2b]/10 shadow-sm"
+                    className="mb-24 bg-[#f8faf9] rounded-[2.5rem] p-8 md:p-12 border border-[#1e3a2b]/10 shadow-sm"
                 >
                     <div className="text-center mb-10">
                         <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#b8860b]">
@@ -82,44 +82,49 @@ export default function MemberList() {
                     </div>
                 </motion.div>
 
-                <div className="text-center mb-24">
-                    <h3 className="text-[#b8860b] uppercase tracking-[0.4em] text-xs mb-4 font-black">Fellow Classmates</h3>
-                    <h2 className="text-4xl md:text-5xl font-bold italic mb-8 text-[#1e3a2b] font-serif tracking-tight">회원 명단 및 핸디캡</h2>
+                {/* 회원 명단 및 핸디캡 (한눈에 보는 컴팩트 표) */}
+                <div className="text-center mb-10">
+                    <h3 className="text-[#b8860b] uppercase tracking-[0.4em] text-xs mb-3 font-black">Fellow Classmates</h3>
+                    <h2 className="text-3xl md:text-4xl font-bold italic mb-4 text-[#1e3a2b] font-serif tracking-tight">회원 명단 및 핸디캡</h2>
                     <div className="h-1 w-20 bg-gradient-to-r from-transparent via-[#b8860b]/30 to-transparent mx-auto"></div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-                    {members.map((member, idx) => (
-                        <motion.div
-                            key={member.id}
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: idx * 0.03, duration: 0.5 }}
-                            className="golf-card p-10 flex flex-col items-center text-center group border-[#1e3a2b]/5 relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-[#1e3a2b]/[0.02] rounded-bl-[3rem] -mr-4 -mt-4 group-hover:bg-[#1e3a2b]/[0.05] transition-colors"></div>
+                <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="bg-[#f8faf9] rounded-[2rem] p-5 md:p-8 border border-[#1e3a2b]/10 shadow-sm max-w-6xl mx-auto"
+                >
+                    <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#1e3a2b]/10 px-1">
+                        <span className="text-xs font-black uppercase tracking-widest text-[#1e3a2b]/60">
+                            전체 회원 핸디캡 일람표
+                        </span>
+                        <span className="text-xs font-bold bg-[#1e3a2b] text-white px-3 py-1 rounded-full">
+                            총 {members.length}명
+                        </span>
+                    </div>
 
-                            <div className="w-20 h-20 rounded-full bg-[#1e3a2b]/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                                {member.role === 'executive' ? (
-                                    <ShieldCheck className="text-[#b8860b]" size={32} />
-                                ) : (
-                                    <User size={32} className="text-[#1e3a2b]/20" />
-                                )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+                        {members.map((member) => (
+                            <div
+                                key={member.id}
+                                className="bg-white px-3.5 py-2.5 rounded-xl border border-[#1e3a2b]/10 flex items-center justify-between hover:border-[#b8860b] hover:shadow-xs transition-all"
+                            >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="font-black text-sm text-[#1e3a2b] whitespace-nowrap">
+                                        {member.name}
+                                    </span>
+                                    {member.role === 'executive' && (
+                                        <ShieldCheck className="text-[#b8860b] shrink-0" size={14} />
+                                    )}
+                                </div>
+                                <span className="text-sm font-black text-[#2d5a27] italic font-serif whitespace-nowrap ml-2">
+                                    {member.handicap}
+                                </span>
                             </div>
-
-                            <div className="font-black text-xl mb-1 text-[#1e3a2b]">{member.name}</div>
-                            <div className="text-[10px] uppercase tracking-[0.2em] text-[#1e3a2b]/30 mb-6 font-bold">{member.role === 'executive' ? 'Executive' : 'Member'}</div>
-
-                            <div className="w-full h-px bg-gradient-to-r from-transparent via-[#1e3a2b]/10 to-transparent mb-6"></div>
-
-                            <div className="flex flex-col items-center">
-                                <span className="text-[9px] uppercase tracking-[0.3em] text-[#b8860b] font-black mb-1">Handicap</span>
-                                <span className="text-2xl font-black text-[#2d5a27] italic font-serif group-hover:text-[#b8860b] transition-colors">{member.handicap}</span>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                </motion.div>
             </div>
         </section>
     );
