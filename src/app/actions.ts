@@ -379,14 +379,15 @@ export async function uploadGalleryImage(formData: FormData) {
         const url = formData.get('url') as string;
         const description = formData.get('description') as string || '';
         const uploadedBy = formData.get('uploadedBy') as string || '동문';
+        const publicId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
         if (!url) {
             return { success: false, error: '이미지 URL이 유효하지 않습니다.' };
         }
 
         await sql`
-            INSERT INTO gallery (url, description, uploaded_by)
-            VALUES (${url}, ${description}, ${uploadedBy})
+            INSERT INTO gallery (public_id, url, description, uploaded_by)
+            VALUES (${publicId}, ${url}, ${description}, ${uploadedBy})
         `;
 
         revalidatePath('/gallery');
