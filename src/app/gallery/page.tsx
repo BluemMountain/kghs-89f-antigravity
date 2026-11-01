@@ -1,11 +1,46 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Plus, X, ArrowLeft, Calendar, User, Trash2, Eye } from 'lucide-react';
+import { Camera, Plus, X, ArrowLeft, Calendar, User, Trash2, Eye, ChevronLeft, ChevronRight, ImagePlus } from 'lucide-react';
 import { getGalleryImages, uploadGalleryImage, deleteGalleryImage } from '@/app/actions';
+
+// Compress and resize image on client side so multiple high-res phone photos upload fast and reliably
+function compressImage(file: File, maxDimension = 1600, quality = 0.85): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+        reader.onload = () => {
+            const img = new window.Image();
+            img.onerror = () => resolve(reader.result as string);
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxDimension || height > maxDimension) {
+                    if (width > height) {
+                        height = Math.round((height * maxDimension) / width);
+                        width = maxDimension;
+                    } else {
+                        width = Math.round((width * maxDimension) / height);
+                        height = maxDimension;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    resolve(reader.result as string);
+                    return;
+                }
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.src = reader.result as string;
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
 export default function GalleryPage() {
     const [images, setImages] = useState<any[]>([]);
@@ -13,7 +48,9 @@ export default function GalleryPage() {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState<any>(null);
     const [uploading, setUploading] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState<string>('');
+    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const [processingFiles, setProcessingFiles] = useState(false);
 
     const fetchImages = async () => {
         setLoading(true);
@@ -26,42 +63,86 @@ export default function GalleryPage() {
         fetchImages();
     }, []);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            if (file.size > 10 * 1024 * 1024) {
-                alert('파일 크기는 10MB 이하이어야 합니다.');
-                return;
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setProcessingFiles(true);
+        const newUrls: string[] = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file.size > 25 * 1024 * 1024) {
+                alert(`"${file.name}" 파일이 너무 큽니다 (25MB 이하만 가능).`);
+                continue;
             }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            try {
+                const compressed = await compressImage(file);
+                newUrls.push(compressed);
+            } catch (err) {
+                console.error(err);
+            }
         }
+
+        setPreviewUrls(prev => [...prev, ...newUrls]);
+        setProcessingFiles(false);
+        // Reset input value so selecting the same or additional files works cleanly
+        e.target.value = '';
+    };
+
+    const removePreview = (index: number) => {
+        setPreviewUrls(prev => prev.filter((_, idx) => idx !== index));
     };
 
     const handleUploadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!previewUrl) {
-            alert('업로드할 사진을 선택하세요.');
+        if (previewUrls.length === 0) {
+            alert('업로드할 사진을 1장 이상 선택하세요.');
             return;
         }
 
         setUploading(true);
-        const form = e.currentTarget;
-        const formData = new FormData(form);
-        formData.append('url', previewUrl);
+        setUploadProgress({ current: 0, total: previewUrls.length });
 
-        const res = await uploadGalleryImage(formData);
-        if (res.success) {
-            setShowUploadModal(false);
-            setPreviewUrl('');
-            await fetchImages();
-        } else {
-            alert('업로드 실패: ' + res.error);
+        const form = e.currentTarget;
+        const baseFormData = new FormData(form);
+        const description = (baseFormData.get('description') as string) || '';
+        const uploadedBy = (baseFormData.get('uploadedBy') as string) || '동문';
+
+        let successCount = 0;
+        let lastError = '';
+
+        // Upload in reverse order so the first selected photo appears first when sorted by created_at DESC
+        const urlsToUpload = [...previewUrls].reverse();
+
+        for (let i = 0; i < urlsToUpload.length; i++) {
+            setUploadProgress({ current: i + 1, total: urlsToUpload.length });
+            const fd = new FormData();
+            fd.append('url', urlsToUpload[i]);
+            fd.append('description', description);
+            fd.append('uploadedBy', uploadedBy);
+
+            const res = await uploadGalleryImage(fd);
+            if (res.success) {
+                successCount++;
+            } else {
+                lastError = res.error || '알 수 없는 오류';
+            }
         }
+
+        if (successCount > 0) {
+            setShowUploadModal(false);
+            setPreviewUrls([]);
+            await fetchImages();
+            if (successCount < urlsToUpload.length) {
+                alert(`${urlsToUpload.length}장 중 ${successCount}장 업로드 완료 (일부 실패: ${lastError})`);
+            }
+        } else {
+            alert('업로드 실패: ' + lastError);
+        }
+
         setUploading(false);
+        setUploadProgress({ current: 0, total: 0 });
     };
 
     const handleDelete = async (id: number) => {
@@ -73,6 +154,14 @@ export default function GalleryPage() {
         } else {
             alert('삭제 실패: ' + res.error);
         }
+    };
+
+    const selectedIndex = selectedImage ? images.findIndex(img => img.id === selectedImage.id) : -1;
+    const handlePrevImage = () => {
+        if (selectedIndex > 0) setSelectedImage(images[selectedIndex - 1]);
+    };
+    const handleNextImage = () => {
+        if (selectedIndex >= 0 && selectedIndex < images.length - 1) setSelectedImage(images[selectedIndex + 1]);
     };
 
     return (
@@ -140,7 +229,7 @@ export default function GalleryPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: (idx % 4) * 0.1 }}
+                                transition={{ delay: (idx % 4) * 0.08 }}
                                 key={img.id}
                                 className="group bg-white rounded-3xl overflow-hidden shadow-sm border border-black/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
                             >
@@ -192,6 +281,11 @@ export default function GalleryPage() {
                             <div className="p-4 bg-black text-white flex justify-between items-center">
                                 <div className="text-sm font-bold flex items-center gap-2">
                                     <Camera size={16} /> {selectedImage.uploaded_by || '동문'} 님의 사진
+                                    {images.length > 1 && (
+                                        <span className="text-xs text-white/50 ml-2">
+                                            ({selectedIndex + 1} / {images.length})
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <button
@@ -210,11 +304,27 @@ export default function GalleryPage() {
                             </div>
 
                             <div className="relative bg-black flex-1 flex items-center justify-center p-2 min-h-[300px] overflow-hidden">
+                                {selectedIndex > 0 && (
+                                    <button
+                                        onClick={handlePrevImage}
+                                        className="absolute left-4 z-10 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center backdrop-blur-md transition-all"
+                                    >
+                                        <ChevronLeft size={24} />
+                                    </button>
+                                )}
                                 <img
                                     src={selectedImage.url}
                                     alt={selectedImage.description || '갤러리 사진'}
                                     className="max-h-[70vh] w-auto max-w-full object-contain rounded-lg"
                                 />
+                                {selectedIndex >= 0 && selectedIndex < images.length - 1 && (
+                                    <button
+                                        onClick={handleNextImage}
+                                        className="absolute right-4 z-10 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center backdrop-blur-md transition-all"
+                                    >
+                                        <ChevronRight size={24} />
+                                    </button>
+                                )}
                             </div>
 
                             {selectedImage.description && (
@@ -230,42 +340,103 @@ export default function GalleryPage() {
                 )}
             </AnimatePresence>
 
-            {/* Upload Modal */}
+            {/* Upload Modal (Multiple Photos Supported) */}
             <AnimatePresence>
                 {showUploadModal && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-[#1e3a2b]/60 backdrop-blur-md">
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-[#1e3a2b]/60 backdrop-blur-md overflow-y-auto">
                         <motion.form
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             onSubmit={handleUploadSubmit}
-                            className="relative w-full max-w-lg bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden border border-[#b8860b]/20"
+                            className="relative w-full max-w-xl bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden border border-[#b8860b]/20 my-auto max-h-[90vh] flex flex-col"
                         >
-                            <div className="flex justify-between items-center mb-6">
+                            <div className="flex justify-between items-center mb-6 shrink-0">
                                 <div>
-                                    <h3 className="text-2xl font-black text-[#1e3a2b] font-serif italic">사진 업로드</h3>
-                                    <p className="text-[#1e3a2b]/50 text-xs mt-1">라운드 추억 사진을 공유해 보세요.</p>
+                                    <h3 className="text-2xl font-black text-[#1e3a2b] font-serif italic">사진 여러 장 업로드</h3>
+                                    <p className="text-[#1e3a2b]/50 text-xs mt-1">한 번에 여러 장의 라운드 추억 사진을 선택하여 올릴 수 있습니다.</p>
                                 </div>
-                                <button type="button" onClick={() => setShowUploadModal(false)} className="text-black/30 hover:text-black">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!uploading) {
+                                            setShowUploadModal(false);
+                                            setPreviewUrls([]);
+                                        }
+                                    }}
+                                    className="text-black/30 hover:text-black"
+                                >
                                     <X size={24} />
                                 </button>
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-6 overflow-y-auto pr-1">
                                 <div>
-                                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-[#b8860b] block mb-2">사진 선택</label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        required
-                                        className="w-full text-sm text-[#1e3a2b] file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-[#1e3a2b] file:text-white hover:file:bg-[#b8860b] file:transition-colors"
-                                    />
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-[11px] font-black uppercase tracking-[0.2em] text-[#b8860b]">
+                                            사진 선택 (다중 선택 가능)
+                                        </label>
+                                        {previewUrls.length > 0 && (
+                                            <span className="text-xs font-black text-[#2d5a27] bg-[#2d5a27]/10 px-3 py-1 rounded-full">
+                                                총 {previewUrls.length}장 선택됨
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[#1e3a2b]/20 rounded-2xl bg-[#f8faf9] hover:bg-[#1e3a2b]/5 hover:border-[#2d5a27] transition-all cursor-pointer">
+                                        <ImagePlus size={28} className="text-[#2d5a27]" />
+                                        <span className="text-sm font-bold text-[#1e3a2b]">
+                                            {processingFiles
+                                                ? '사진 불러오는 중...'
+                                                : previewUrls.length > 0
+                                                ? '클릭하여 사진 추가 선택하기'
+                                                : '클릭하여 사진 여러 장 선택하기'}
+                                        </span>
+                                        <span className="text-[11px] text-[#1e3a2b]/40">
+                                            Ctrl / Shift 키 또는 모바일에서 여러 장을 동시에 선택하세요
+                                        </span>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleFileChange}
+                                            disabled={uploading || processingFiles}
+                                            className="hidden"
+                                        />
+                                    </label>
                                 </div>
 
-                                {previewUrl && (
-                                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-black/10 bg-black/5">
-                                        <img src={previewUrl} alt="미리보기" className="w-full h-full object-cover" />
+                                {previewUrls.length > 0 && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-bold text-[#1e3a2b]/60">미리보기</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewUrls([])}
+                                                disabled={uploading}
+                                                className="text-xs font-bold text-red-500 hover:underline"
+                                            >
+                                                전체 선택 취소
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-52 overflow-y-auto p-2 rounded-2xl bg-[#f8faf9] border border-black/5">
+                                            {previewUrls.map((url, index) => (
+                                                <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-black/10 bg-black/5 group">
+                                                    <img src={url} alt={`미리보기 ${index + 1}`} className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removePreview(index)}
+                                                        disabled={uploading}
+                                                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-red-500 transition-colors"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                    <span className="absolute bottom-1 left-1.5 text-[10px] font-black bg-black/60 text-white px-1.5 py-0.5 rounded">
+                                                        {index + 1}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 
@@ -273,8 +444,8 @@ export default function GalleryPage() {
                                     <label className="text-[11px] font-black uppercase tracking-[0.2em] text-[#b8860b] block mb-2">사진 설명 (선택)</label>
                                     <textarea
                                         name="description"
-                                        placeholder="예: 5월 라싸CC 1번 홀 단체사진"
-                                        rows={3}
+                                        placeholder="예: 10월 31일 납회식 라싸CC 라운딩"
+                                        rows={2}
                                         className="w-full bg-[#f8faf9] border border-[#1e3a2b]/10 rounded-2xl p-4 text-sm font-medium text-[#1e3a2b] focus:outline-none focus:border-[#2d5a27] resize-none"
                                     ></textarea>
                                 </div>
@@ -289,20 +460,28 @@ export default function GalleryPage() {
                                     />
                                 </div>
 
-                                <div className="flex gap-4 pt-4">
+                                <div className="flex gap-4 pt-2">
                                     <button
                                         type="button"
-                                        onClick={() => setShowUploadModal(false)}
-                                        className="flex-1 px-4 py-4 rounded-full font-black text-xs uppercase tracking-widest text-[#1e3a2b]/40 hover:bg-black/5 transition-all"
+                                        disabled={uploading}
+                                        onClick={() => {
+                                            setShowUploadModal(false);
+                                            setPreviewUrls([]);
+                                        }}
+                                        className="flex-1 px-4 py-4 rounded-full font-black text-xs uppercase tracking-widest text-[#1e3a2b]/40 hover:bg-black/5 transition-all disabled:opacity-40"
                                     >
                                         취소
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={uploading}
+                                        disabled={uploading || processingFiles || previewUrls.length === 0}
                                         className="flex-1 px-4 py-4 rounded-full font-black text-xs uppercase tracking-widest bg-[#1e3a2b] text-white hover:bg-[#b8860b] transition-all shadow-lg disabled:opacity-50"
                                     >
-                                        {uploading ? '업로드 중...' : '업로드 완료'}
+                                        {uploading
+                                            ? `업로드 중... (${uploadProgress.current}/${uploadProgress.total})`
+                                            : previewUrls.length > 0
+                                            ? `${previewUrls.length}장 업로드 완료`
+                                            : '업로드 완료'}
                                     </button>
                                 </div>
                             </div>
