@@ -147,49 +147,73 @@ export default function Home() {
                     viewport={{ once: true }}
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
-                    {/* May 9 Round */}
+                    {/* May 15 Special Round */}
                     <motion.div variants={fadeInUp} className="golf-card p-12 relative overflow-hidden group border-t-8 border-[#b8860b]">
                         <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">05</div>
                         <div className="inline-flex items-center gap-3 mb-8">
-                            <span className="text-[#b8860b] text-xl font-bold">5월 9일</span>
-                            <span className="px-3 py-1 bg-black/5 rounded-full text-xs font-bold text-[#1e3a2b]">4팀 규모</span>
+                            <span className="text-[#b8860b] text-xl font-bold">5월 15일</span>
+                            <span className="px-3 py-1 bg-black/5 rounded-full text-xs font-bold text-[#1e3a2b]">공식 행사</span>
                         </div>
-                        <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">스프링 친선 라운드</h4>
-                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">따뜻한 5월의 필드에서 진행되는 동문 간의 친목 도모 라운드입니다.</p>
+                        <h4 className="text-3xl font-bold mb-6 text-[#1e3a2b]">정기모임 (본선)</h4>
+                        <p className="opacity-60 font-light mb-12 text-md leading-relaxed text-[#1e3a2b]">연중 가장 큰 규모로 개최되는 경기고 89회 불어반 공식 정기 골프 모임입니다.</p>
                         <div className="flex flex-col gap-2">
                             <div className="text-[#2d5a27] font-black text-sm uppercase tracking-widest flex items-center gap-2 mt-auto">
-                                <MapPin size={16} /> Lassa GC
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* May 15 Special Round */}
-                    <motion.div variants={fadeInUp} className="bg-[#1e3a2b] p-12 rounded-[2.5rem] text-white transform lg:scale-[1.05] shadow-2xl z-20 relative overflow-hidden group border-2 border-[#b8860b]/20">
-                        <div className="text-[8rem] font-serif font-black opacity-[0.05] absolute -top-4 -right-4 italic">Event</div>
-                        <div className="inline-flex items-center gap-3 mb-8">
-                            <span className="text-[#d4af37] text-xl font-bold">5월 15일</span>
-                            <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold text-[#d4af37]">공식 행사</span>
-                        </div>
-                        <h4 className="text-3xl font-bold mb-6 italic">정기모임 (본선)</h4>
-                        <p className="opacity-80 font-light mb-12 text-md leading-relaxed">연중 가장 큰 규모로 개최되는 경기고 89회 불어반 공식 정기 골프 모임입니다.</p>
-                        <div className="flex flex-col gap-2">
-                            <div className="font-black text-sm uppercase tracking-widest flex items-center gap-2 text-[#d4af37] mt-auto">
-                                <Calendar size={18} /> 일정 확정
+                                <Calendar size={16} /> 일정 확정
                             </div>
                         </div>
                     </motion.div>
 
                     {/* October 31 Round (납회식 백 vs 흑 대전) */}
-                    <motion.div variants={fadeInUp} className="golf-card p-10 relative overflow-hidden group border-t-8 border-[#1e3a2b]">
-                        <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">10</div>
+                    <motion.div variants={fadeInUp} className="bg-[#1e3a2b] p-10 rounded-[2.5rem] text-white transform lg:scale-[1.05] shadow-2xl z-20 relative overflow-hidden group border-2 border-[#b8860b]/20">
+                        <div className="text-[10rem] font-serif font-black opacity-[0.05] absolute -top-4 -right-4 italic">10</div>
                         <div className="inline-flex flex-wrap items-center gap-2.5 mb-6">
-                            <span className="text-[#1e3a2b] text-xl font-bold">10월 31일</span>
-                            <span className="px-3 py-1 bg-[#1e3a2b]/10 rounded-full text-xs font-bold text-[#1e3a2b]">납회식</span>
-                            <span className="px-3 py-1 bg-[#b8860b]/10 rounded-full text-xs font-bold text-[#b8860b]">백 vs 흑 대전</span>
+                            <span className="text-[#d4af37] text-xl font-bold">10월 31일</span>
+                            <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold text-white">납회식</span>
+                            <span className="px-3 py-1 bg-[#d4af37]/20 rounded-full text-xs font-bold text-[#d4af37]">백 vs 흑 대전</span>
                         </div>
-                        <h4 className="text-3xl font-bold mb-4 text-[#1e3a2b]">납회식 (백 vs 흑 대전)</h4>
-                        <p className="opacity-70 font-light mb-6 text-sm leading-relaxed text-[#1e3a2b]">
+                        <h4 className="text-3xl font-bold mb-4 italic text-white">납회식 (백 vs 흑 대전)</h4>
+                        <p className="opacity-80 font-light mb-6 text-sm leading-relaxed text-white">
                             한 해의 골프 시즌을 마무리하는 백팀과 흑팀의 라이벌 대전 라운드입니다.
+                        </p>
+
+                        {/* Team Line-up */}
+                        <div className="bg-white/10 p-4 rounded-2xl mb-6 space-y-3 text-xs border border-white/10">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                                <span className="px-2.5 py-1 bg-white text-black font-black rounded-lg border border-black/10 shrink-0 text-center w-max shadow-sm">
+                                    ⚪ 백팀 (6명)
+                                </span>
+                                <span className="font-bold text-white leading-relaxed break-keep">
+                                    한승훈, 김기홍, 김천중<br />황승용, 조명환, 김재우
+                                </span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 pt-2 border-t border-white/10">
+                                <span className="px-2.5 py-1 bg-black/60 text-white font-black rounded-lg border border-white/20 shrink-0 text-center w-max shadow-sm">
+                                    ⚫ 흑팀 (6명)
+                                </span>
+                                <span className="font-bold text-white leading-relaxed break-keep">
+                                    박청산, 안수용, 김동익<br />마석용, 김준규, 박경배
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <div className="text-[#d4af37] font-black text-sm uppercase tracking-widest flex items-center gap-2 mt-auto">
+                                <MapPin size={16} /> Lassa GC
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* 27년 4월 24일 Round (봄 운동회 청 vs 백 2차전) */}
+                    <motion.div variants={fadeInUp} className="golf-card p-10 relative overflow-hidden group border-t-8 border-[#2563eb]">
+                        <div className="text-[10rem] font-serif font-black text-[#1e3a2b]/[0.02] absolute -top-4 -right-4 transition-all group-hover:text-[#1e3a2b]/[0.05]">04</div>
+                        <div className="inline-flex flex-wrap items-center gap-2.5 mb-6">
+                            <span className="text-[#1e3a2b] text-xl font-bold">27년 4월 24일</span>
+                            <span className="px-3 py-1 bg-[#2563eb]/10 rounded-full text-xs font-bold text-[#2563eb]">봄 운동회</span>
+                            <span className="px-3 py-1 bg-[#b8860b]/10 rounded-full text-xs font-bold text-[#b8860b]">청 vs 백 2차전</span>
+                        </div>
+                        <h4 className="text-3xl font-bold mb-4 text-[#1e3a2b]">봄 운동회 (청 vs 백 2차전)</h4>
+                        <p className="opacity-70 font-light mb-6 text-sm leading-relaxed text-[#1e3a2b]">
+                            봄 시즌의 문을 여는 청팀과 백팀의 자존심을 건 라이벌 리매치 라운드입니다.
                         </p>
 
                         {/* Team Line-up */}
@@ -203,8 +227,8 @@ export default function Home() {
                                 </span>
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 pt-2 border-t border-black/5">
-                                <span className="px-2.5 py-1 bg-[#1e3a2b] text-white font-black rounded-lg shrink-0 text-center w-max shadow-sm">
-                                    ⚫ 흑팀 (6명)
+                                <span className="px-2.5 py-1 bg-[#2563eb] text-white font-black rounded-lg shrink-0 text-center w-max shadow-sm">
+                                    🔵 청팀 (6명)
                                 </span>
                                 <span className="font-bold text-[#1e3a2b] leading-relaxed break-keep">
                                     박청산, 안수용, 김동익<br />마석용, 김준규, 박경배
