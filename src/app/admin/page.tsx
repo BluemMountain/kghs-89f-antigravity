@@ -967,7 +967,7 @@ function RsvpManagementView({ members = [] }: { members?: any[] }) {
                                                 handleGroupChange(rId, gKey === '미지정' ? '' : gKey);
                                             }
                                         }}
-                                        className={`p-5 rounded-2xl border transition-all ${
+                                        className={`p-4 rounded-2xl border transition-all ${
                                             gKey === '미지정' 
                                                 ? 'bg-black/5 border-dashed border-black/15' 
                                                 : 'bg-white border-[#2d5a27]/20 shadow-md hover:border-[#b8860b]'
@@ -990,23 +990,23 @@ function RsvpManagementView({ members = [] }: { members?: any[] }) {
                                                     onDragStart={(e) => {
                                                         e.dataTransfer.setData('text/plain', m.id.toString());
                                                     }}
-                                                    className="text-sm font-bold text-[#1e3a2b] flex items-center justify-between p-2.5 rounded-xl bg-[#f8faf9] hover:bg-[#2d5a27]/10 cursor-grab active:cursor-grabbing transition-all group/item border border-black/5 hover:border-[#2d5a27]/30 gap-2 shadow-sm"
+                                                    className="text-sm font-bold text-[#1e3a2b] flex items-center justify-between px-2.5 py-2 rounded-xl bg-[#f8faf9] hover:bg-[#2d5a27]/10 cursor-grab active:cursor-grabbing transition-all group/item border border-black/5 hover:border-[#2d5a27]/30 gap-1.5 shadow-sm"
                                                 >
-                                                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                        <GripVertical size={14} className="text-black/30 group-hover/item:text-[#2d5a27] shrink-0" />
-                                                        <span className="font-bold text-sm text-[#1e3a2b] whitespace-nowrap truncate">{m.name}</span>
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <GripVertical size={13} className="text-black/30 group-hover/item:text-[#2d5a27] shrink-0" />
+                                                        <span className="font-bold text-sm text-[#1e3a2b] whitespace-nowrap">{m.name}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                                                        <span className="text-xs text-black/50 font-bold whitespace-nowrap bg-white px-2 py-0.5 rounded-md border border-black/5">
-                                                            H: {m.member_handicap || '-'}
+                                                    <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
+                                                        <span className="text-[11px] text-black/50 font-bold whitespace-nowrap bg-white px-1.5 py-0.5 rounded-md border border-black/5">
+                                                            H:{m.member_handicap || '-'}
                                                         </span>
-                                                        <span className="text-xs text-[#b8860b] font-bold whitespace-nowrap bg-[#b8860b]/10 px-2 py-0.5 rounded-md border border-[#b8860b]/15">
-                                                            이전: {m.last_score || '-'}
+                                                        <span className="text-[11px] text-[#b8860b] font-bold whitespace-nowrap bg-[#b8860b]/10 px-1.5 py-0.5 rounded-md border border-[#b8860b]/15">
+                                                            이전:{m.last_score || '-'}
                                                         </span>
                                                         <select
                                                             value={m.group_name || ''}
                                                             onChange={(e) => handleGroupChange(m.id, e.target.value)}
-                                                            className="text-xs bg-white border border-black/15 rounded-lg px-2 py-1 font-bold text-[#2d5a27] cursor-pointer focus:outline-none shadow-sm hover:border-[#2d5a27]"
+                                                            className="text-[11px] bg-white border border-black/15 rounded-lg px-1.5 py-0.5 font-bold text-[#2d5a27] cursor-pointer focus:outline-none shadow-sm hover:border-[#2d5a27]"
                                                         >
                                                             <option value="">미지정</option>
                                                             <option value="1조">1조</option>
