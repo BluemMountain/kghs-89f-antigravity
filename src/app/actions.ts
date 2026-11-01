@@ -465,3 +465,51 @@ export async function autoAssignGroups(roundId: number) {
     }
 }
 
+export async function bulkAddRsvps(
+    roundId: number,
+    names: string[],
+    status: string = 'attend',
+    groupName: string = ''
+) {
+    try {
+        await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS group_name VARCHAR(50);`;
+
+        const cleanNames = Array.from(
+            new Set(names.map(n => n.trim()).filter(n => n.length > 0))
+        );
+
+        if (cleanNames.length === 0) {
+            return { success: false, error: '등록할 참석자 이름을 선택하거나 입력해 주세요.' };
+        }
+
+        let addedCount = 0;
+        for (const name of cleanNames) {
+            const existing = await sql`
+                SELECT id FROM rsvps
+                WHERE round_id = ${roundId} AND name = ${name}
+            `;
+
+            if (existing.length > 0) {
+                await sql`
+                    UPDATE rsvps
+                    SET status = ${status},
+                        group_name = COALESCE(NULLIF(${groupName}, ''), group_name)
+                    WHERE id = ${existing[0].id}
+                `;
+            } else {
+                await sql`
+                    INSERT INTO rsvps (round_id, name, status, group_name, sponsor_item, comment)
+                    VALUES (${roundId}, ${name}, ${status}, ${groupName || null}, '', '')
+                `;
+            }
+            addedCount++;
+        }
+
+        revalidatePath('/', 'layout');
+        return { success: true, count: addedCount };
+    } catch (error: any) {
+        console.error('Error bulk adding RSVPs:', error);
+        return { success: false, error: error.message };
+    }
+}
+

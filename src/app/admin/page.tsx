@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound, getRoundParticipants, finalizeRound, deleteRsvp, getRsvps, getUpcomingRound, updateRsvpGroup, autoAssignGroups } from '@/app/actions';
+import { getMembers, getAllRounds, addMember, updateMember, deleteMember, addRound, deleteRound, getRoundParticipants, finalizeRound, deleteRsvp, getRsvps, getUpcomingRound, updateRsvpGroup, autoAssignGroups, bulkAddRsvps } from '@/app/actions';
 import ScoreHistoryTable from '@/components/ScoreHistoryTable';
 import {
     LayoutDashboard,
@@ -166,7 +166,7 @@ export default function AdminPage() {
                                 {activeTab === 'dashboard' && <DashboardView members={members} rounds={rounds} setActiveTab={setActiveTab} />}
                                 {activeTab === 'members' && <MemberManagementView members={members} refresh={refreshData} />}
                                 {activeTab === 'rounds' && <RoundManagementView rounds={rounds} refresh={refreshData} />}
-                                {activeTab === 'rsvps' && <RsvpManagementView />}
+                                {activeTab === 'rsvps' && <RsvpManagementView members={members} />}
                                 {activeTab === 'history' && (
                                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                                         <ScoreHistoryTable />
@@ -739,12 +739,18 @@ function ScoreEntryView({ round, refresh, onDelete }: any) {
     );
 }
 
-function RsvpManagementView() {
+function RsvpManagementView({ members = [] }: { members?: any[] }) {
     const [round, setRound] = useState<any>(null);
     const [rsvps, setRsvps] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState<number | null>(null);
     const [autoAssigning, setAutoAssigning] = useState(false);
+    const [showBulkModal, setShowBulkModal] = useState(false);
+    const [selectedNames, setSelectedNames] = useState<string[]>([]);
+    const [customNamesInput, setCustomNamesInput] = useState('');
+    const [bulkStatus, setBulkStatus] = useState<'attend' | 'absent'>('attend');
+    const [bulkGroup, setBulkGroup] = useState('');
+    const [submittingBulk, setSubmittingBulk] = useState(false);
 
     const fetchRsvps = async () => {
         setLoading(true);
@@ -795,6 +801,38 @@ function RsvpManagementView() {
         setAutoAssigning(false);
     };
 
+    const toggleMemberSelect = (name: string) => {
+        setSelectedNames(prev =>
+            prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+        );
+    };
+
+    const handleBulkSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!round) return;
+        const typedNames = customNamesInput
+            .split(/[,/\n]+/)
+            .map(s => s.trim())
+            .filter(Boolean);
+        const allNames = Array.from(new Set([...selectedNames, ...typedNames]));
+        if (allNames.length === 0) {
+            alert('등록할 회원을 선택하거나 이름을 입력해 주세요.');
+            return;
+        }
+        setSubmittingBulk(true);
+        const res = await bulkAddRsvps(round.id, allNames, bulkStatus, bulkGroup);
+        setSubmittingBulk(false);
+        if (res.success) {
+            setShowBulkModal(false);
+            setSelectedNames([]);
+            setCustomNamesInput('');
+            setBulkGroup('');
+            await fetchRsvps();
+        } else {
+            alert('등록 실패: ' + res.error);
+        }
+    };
+
     if (loading) return <div className="animate-pulse glass h-[400px] rounded-[2rem]"></div>;
 
     // Grouping summary
@@ -833,6 +871,14 @@ function RsvpManagementView() {
                             ⚡ 자동 4인 조편성
                         </button>
                     )}
+                    {round && (
+                        <button
+                            onClick={() => setShowBulkModal(true)}
+                            className="bg-[#1e3a2b] text-white px-5 py-3 rounded-xl font-bold hover:bg-[#b8860b] transition-all shadow-lg shadow-[#1e3a2b]/10 text-xs uppercase tracking-widest flex items-center gap-2"
+                        >
+                            <Plus size={16} /> 참석자 수동 등록
+                        </button>
+                    )}
                     <button
                         onClick={fetchRsvps}
                         className="bg-[#2d5a27] text-white px-5 py-3 rounded-xl font-bold hover:bg-[#b8860b] transition-all shadow-lg shadow-[#2d5a27]/10 text-xs uppercase tracking-widest"
@@ -848,7 +894,13 @@ function RsvpManagementView() {
                 </div>
             ) : rsvps.length === 0 ? (
                 <div className="glass p-16 rounded-[2rem] bg-white/40 text-center">
-                    <p className="text-black/40 italic font-serif text-lg">아직 신청자가 없습니다.</p>
+                    <p className="text-black/40 italic font-serif text-lg mb-6">아직 신청자가 없습니다.</p>
+                    <button
+                        onClick={() => setShowBulkModal(true)}
+                        className="bg-[#2d5a27] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#b8860b] transition-all shadow-lg shadow-[#2d5a27]/10 text-sm inline-flex items-center gap-2"
+                    >
+                        <Plus size={18} /> 참석자 여러 명 수동 등록하기
+                    </button>
                 </div>
             ) : (
                 <div className="space-y-8">
@@ -1028,6 +1080,160 @@ function RsvpManagementView() {
                     </div>
                 </div>
             )}
+
+            {/* 참석자 수동 일괄 등록 Modal */}
+            <AnimatePresence>
+                {showBulkModal && round && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm overflow-y-auto">
+                        <motion.form
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            onSubmit={handleBulkSubmit}
+                            className="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-2xl shadow-2xl space-y-6 my-auto max-h-[90vh] flex flex-col"
+                        >
+                            <div className="flex justify-between items-center border-b border-black/5 pb-4 shrink-0">
+                                <div>
+                                    <h3 className="text-2xl font-bold font-serif italic text-[#1e3a2b]">참석자 수동 일괄 등록</h3>
+                                    <p className="text-xs text-black/40 mt-1">
+                                        {round.title} · 회원 명단에서 클릭하거나 이름을 직접 입력해 여러 명을 한 번에 등록합니다.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBulkModal(false)}
+                                    className="text-black/30 hover:text-black"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6 overflow-y-auto pr-1">
+                                {/* 1. 회원 명단에서 클릭하여 다중 선택 */}
+                                <div>
+                                    <div className="flex flex-wrap justify-between items-center mb-3 gap-2">
+                                        <label className="text-xs font-black uppercase tracking-widest text-[#2d5a27]">
+                                            1. 회원 명단에서 선택 ({selectedNames.length}명 선택됨)
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const existingNames = new Set(rsvps.map((r: any) => r.name));
+                                                    const unregistered = members
+                                                        .map((m: any) => m.name)
+                                                        .filter((n: string) => !existingNames.has(n));
+                                                    setSelectedNames(unregistered);
+                                                }}
+                                                className="text-xs font-bold px-3 py-1 rounded-lg bg-[#2d5a27]/10 text-[#2d5a27] hover:bg-[#2d5a27]/20 transition-all"
+                                            >
+                                                미등록 전체 선택
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedNames([])}
+                                                className="text-xs font-bold px-3 py-1 rounded-lg bg-black/5 text-black/50 hover:bg-black/10 transition-all"
+                                            >
+                                                선택 해제
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-3 rounded-2xl bg-[#f8faf9] border border-black/5">
+                                        {members.map((m: any) => {
+                                            const isSelected = selectedNames.includes(m.name);
+                                            const isAlreadyRegistered = rsvps.some((r: any) => r.name === m.name);
+                                            return (
+                                                <button
+                                                    type="button"
+                                                    key={m.id}
+                                                    onClick={() => toggleMemberSelect(m.name)}
+                                                    className={`px-3 py-2.5 rounded-xl text-left border transition-all flex items-center justify-between text-xs font-bold ${
+                                                        isSelected
+                                                            ? 'bg-[#2d5a27] text-white border-[#2d5a27] shadow-md scale-[1.01]'
+                                                            : isAlreadyRegistered
+                                                            ? 'bg-black/5 text-black/40 border-black/5'
+                                                            : 'bg-white text-[#1e3a2b] border-black/10 hover:border-[#2d5a27]'
+                                                    }`}
+                                                >
+                                                    <span className="truncate">{m.name}</span>
+                                                    <span className={`text-[10px] ml-1 shrink-0 ${isSelected ? 'text-white/80' : 'text-black/40'}`}>
+                                                        {isAlreadyRegistered ? '등록됨' : m.handicap}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* 2. 직접 이름 입력 */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-[#2d5a27] block">
+                                        2. 직접 이름 추가 입력 (선택 · 쉼표 또는 줄바꿈으로 구분)
+                                    </label>
+                                    <textarea
+                                        value={customNamesInput}
+                                        onChange={(e) => setCustomNamesInput(e.target.value)}
+                                        placeholder="예: 홍길동, 이순신 (명단에 없는 게스트나 회원을 여러 명 입력할 수 있습니다)"
+                                        rows={2}
+                                        className="w-full bg-[#f8faf9] border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-[#1e3a2b] focus:outline-none focus:border-[#2d5a27] resize-none"
+                                    />
+                                </div>
+
+                                {/* 3. 상태 및 조 지정 */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black uppercase tracking-widest text-black/50 block">참석 상태</label>
+                                        <select
+                                            value={bulkStatus}
+                                            onChange={(e) => setBulkStatus(e.target.value as 'attend' | 'absent')}
+                                            className="w-full bg-[#f8faf9] border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-[#1e3a2b] focus:outline-none focus:border-[#2d5a27]"
+                                        >
+                                            <option value="attend">참석 확정</option>
+                                            <option value="absent">불참</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black uppercase tracking-widest text-black/50 block">조 배정 (선택)</label>
+                                        <select
+                                            value={bulkGroup}
+                                            onChange={(e) => setBulkGroup(e.target.value)}
+                                            className="w-full bg-[#f8faf9] border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-[#1e3a2b] focus:outline-none focus:border-[#2d5a27]"
+                                        >
+                                            <option value="">미지정 (나중에 조편성)</option>
+                                            <option value="1조">1조</option>
+                                            <option value="2조">2조</option>
+                                            <option value="3조">3조</option>
+                                            <option value="4조">4조</option>
+                                            <option value="5조">5조</option>
+                                            <option value="6조">6조</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowBulkModal(false)}
+                                        className="flex-1 py-4 rounded-xl font-bold text-sm text-black/40 hover:bg-black/5 transition-all"
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submittingBulk}
+                                        className="flex-1 py-4 rounded-xl font-bold text-sm bg-[#2d5a27] text-white hover:bg-[#b8860b] transition-all shadow-lg shadow-[#2d5a27]/10 disabled:opacity-50"
+                                    >
+                                        {submittingBulk
+                                            ? '등록 중...'
+                                            : `선택한 인원 일괄 등록하기`}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.form>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
