@@ -249,6 +249,11 @@ function StatCard({ label, value, icon }: any) {
 
 function MemberManagementView({ members, refresh }: any) {
     const [isAdding, setIsAdding] = useState(false);
+    const [sortByHandicap, setSortByHandicap] = useState(false);
+
+    const displayedMembers = sortByHandicap
+        ? [...members].sort((a, b) => (parseFloat(a.handicap) || 999) - (parseFloat(b.handicap) || 999))
+        : members;
 
     const handleDelete = async (id: number) => {
         if (confirm('정말 삭제하시겠습니까?')) {
@@ -259,20 +264,34 @@ function MemberManagementView({ members, refresh }: any) {
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <h1 className="text-4xl font-bold italic text-[#1e3a2b] font-serif">Member Management</h1>
-                <button
-                    onClick={() => setIsAdding(true)}
-                    className="bg-[#2d5a27] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#b8860b] transition-all flex items-center gap-2 shadow-lg shadow-[#2d5a27]/10"
-                >
-                    <Plus size={18} /> Add Member
-                </button>
+                <div className="flex flex-wrap items-center gap-3">
+                    <button
+                        onClick={() => setSortByHandicap(prev => !prev)}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg ${
+                            sortByHandicap
+                                ? 'bg-[#b8860b] text-white shadow-[#b8860b]/20'
+                                : 'bg-white text-[#1e3a2b] border border-black/10 hover:border-[#b8860b]'
+                        }`}
+                    >
+                        <Trophy size={18} className={sortByHandicap ? 'text-white' : 'text-[#b8860b]'} />
+                        {sortByHandicap ? '핸디캡 순위순 (가나다순 전환)' : '핸디캡 순위 보기'}
+                    </button>
+                    <button
+                        onClick={() => setIsAdding(true)}
+                        className="bg-[#2d5a27] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#b8860b] transition-all flex items-center gap-2 shadow-lg shadow-[#2d5a27]/10"
+                    >
+                        <Plus size={18} /> Add Member
+                    </button>
+                </div>
             </div>
 
             <div className="glass rounded-[2rem] bg-white/50 overflow-hidden shadow-xl border-black/5">
                 <table className="w-full text-left">
                     <thead className="bg-[#2d5a27] text-white text-[10px] font-black uppercase tracking-widest">
                         <tr>
+                            {sortByHandicap && <th className="px-6 py-5 w-24 text-center">Rank</th>}
                             <th className="px-8 py-5">Name</th>
                             <th className="px-8 py-5 text-center">Handicap</th>
                             <th className="px-8 py-5 text-center">Role</th>
@@ -280,8 +299,23 @@ function MemberManagementView({ members, refresh }: any) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-black/5">
-                        {members.map((member: any) => (
+                        {displayedMembers.map((member: any, idx: number) => (
                             <tr key={member.id} className="hover:bg-white/40 transition-colors">
+                                {sortByHandicap && (
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black ${
+                                            idx === 0
+                                                ? 'bg-[#d4af37] text-white shadow-sm'
+                                                : idx === 1
+                                                ? 'bg-gray-400 text-white'
+                                                : idx === 2
+                                                ? 'bg-[#cd7f32] text-white'
+                                                : 'bg-black/5 text-black/50'
+                                        }`}>
+                                            {idx + 1}위
+                                        </span>
+                                    </td>
+                                )}
                                 <td className="px-8 py-4 font-bold text-black/80">{member.name}</td>
                                 <td className="px-8 py-4 text-center italic font-black text-[#2d5a27]">{member.handicap}</td>
                                 <td className="px-8 py-4 text-center">
