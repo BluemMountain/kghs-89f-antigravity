@@ -96,7 +96,7 @@ export default function MemberList() {
                     className="bg-[#f8faf9] rounded-[2rem] p-5 md:p-8 border border-[#1e3a2b]/10 shadow-sm max-w-6xl mx-auto"
                 >
                     <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#1e3a2b]/10 px-1">
-                        <span className="text-xs font-black uppercase tracking-widest text-[#1e3a2b]/60">
+                        <span className="text-xs font-black uppercase tracking-widest text-[#1e3a2b]/70">
                             전체 회원 핸디캡 일람표
                         </span>
                         <span className="text-xs font-bold bg-[#1e3a2b] text-white px-3 py-1 rounded-full">
